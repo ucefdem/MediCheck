@@ -24,6 +24,7 @@ export interface TavilyCard {
 
 export interface TriageResponse {
   pioneer: ExtractionResult;
+  pioneer_finetuned?: ExtractionResult | null;
   openai: ExtractionResult;
   tavily_cards: TavilyCard[];
   transcript: string;

@@ -35,6 +35,20 @@ const sampleResults: TriageResponse = {
       Frequency: ["every morning"],
     },
   },
+  pioneer_finetuned: {
+    latency_ms: 416,
+    provider: "pioneer_gliner2_finetuned",
+    entities: {
+      ...emptyEntities,
+      Symptom: ["chest pain"],
+      Medication: ["Lisinopril", "ibuprofen"],
+      Dosage: ["50 milligrams"],
+      "Medical History": ["bypass surgery"],
+      "Anatomical Site": ["left side"],
+      Duration: ["three days"],
+      Frequency: ["every morning"],
+    },
+  },
   openai: {
     latency_ms: 2841,
     entities: {
@@ -107,7 +121,7 @@ function EntityPanel({
 
   return (
     <section
-      className={`min-h-[360px] border p-5 ${
+      className={`border p-5 ${
         isWinner
           ? "border-emerald-400/60 bg-emerald-400/[0.04]"
           : "border-zinc-800 bg-zinc-950"
@@ -118,7 +132,10 @@ function EntityPanel({
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
             {eyebrow}
           </p>
-          <h2 className="mt-1 text-lg font-semibold text-white">{title}</h2>
+          <h2 className="mt-1 text-xl font-semibold text-white">{title}</h2>
+          {result?.provider ? (
+            <p className="mt-1 text-xs text-zinc-600">{result.provider}</p>
+          ) : null}
         </div>
         <LatencyBadge latency={result?.latency_ms} />
       </div>
@@ -145,7 +162,7 @@ function EntityPanel({
           ))}
         </div>
       ) : (
-        <div className="flex h-52 items-center justify-center border border-dashed border-zinc-800 text-sm text-zinc-500">
+        <div className="flex min-h-36 items-center justify-center border border-dashed border-zinc-800 px-4 text-center text-sm text-zinc-500">
           Run an analysis to populate extracted entities.
         </div>
       )}
@@ -359,40 +376,60 @@ export default function Home() {
           </div>
         ) : null}
 
-        <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
-          <div className="border border-zinc-800 bg-zinc-950 p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
-                  Live transcript
-                </p>
-                <h2 className="mt-1 text-lg font-semibold text-white">
-                  Patient History
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setTranscript(demoTranscript)}
-                className="border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:border-zinc-500 hover:bg-zinc-900"
-              >
-                Demo Text
-              </button>
+        <section className="border border-zinc-800 bg-zinc-950 p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Live transcript
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-white">
+                Patient History
+              </h2>
             </div>
-
-            <textarea
-              value={transcript}
-              onChange={(event) => setTranscript(event.target.value)}
-              placeholder="Type or paste the patient transcript here."
-              className="h-[360px] w-full resize-none border border-zinc-800 bg-[#0c1117] p-4 text-base leading-7 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-400/70"
-            />
+            <button
+              type="button"
+              onClick={() => setTranscript(demoTranscript)}
+              className="border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:border-zinc-500 hover:bg-zinc-900"
+            >
+              Demo Text
+            </button>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <textarea
+            value={transcript}
+            onChange={(event) => setTranscript(event.target.value)}
+            placeholder="Type or paste the patient transcript here."
+            className="min-h-[180px] w-full resize-y border border-zinc-800 bg-[#0c1117] p-4 text-base leading-7 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-400/70"
+          />
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex flex-col gap-1 border-b border-zinc-800 pb-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
+                Model benchmark
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-white">
+                Extraction Results
+              </h2>
+            </div>
+            <p className="text-sm text-zinc-500">
+              Zero-shot, fine-tuned, and GPT baseline compared side by side.
+            </p>
+          </div>
+
+          <div className="grid gap-5 xl:grid-cols-3">
             <EntityPanel
-              title="Pioneer GLiNER2"
-              eyebrow="Specialized NER"
+              title="Pioneer Zero-shot"
+              eyebrow="GLiNER2"
               result={activeResults?.pioneer}
               isWinner={activeResults?.winner === "pioneer"}
+            />
+            <EntityPanel
+              title="Pioneer Fine-tuned"
+              eyebrow="Medical GLiNER2"
+              result={activeResults?.pioneer_finetuned ?? undefined}
+              isWinner={activeResults?.winner === "pioneer_finetuned"}
             />
             <EntityPanel
               title="GPT-4o-mini"
