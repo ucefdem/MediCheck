@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import os
+from pathlib import Path
 from typing import Optional
 
 import httpx
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 TAVILY_URL = "https://api.tavily.com/search"
 

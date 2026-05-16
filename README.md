@@ -9,11 +9,11 @@ Evaluated on 25 synthetic, privacy-safe patient transcripts.
 
 | Metric | Pioneer GLiNER2 | OpenAI GPT-4o-mini |
 |---|---:|---:|
-| Avg Latency | 1,367ms | 1,982ms |
-| Precision | 100.0% | 100.0% |
-| Recall | 79.5% | 86.1% |
-| F1 | 88.2% | 92.3% |
-| Speed Advantage | 1.4x faster | baseline |
+| Avg Latency | 689ms | 2,225ms |
+| Precision | 99.0% | 100.0% |
+| Recall | 82.8% | 86.1% |
+| F1 | 89.9% | 92.3% |
+| Speed Advantage | 3.2x faster | baseline |
 
 ## Backend Setup
 
@@ -94,8 +94,9 @@ The benchmark writes `benchmark_results.json`.
 
 Pioneer GLiNER2 performs adaptive, zero-shot entity extraction: we can define
 medical labels like `Medication`, `Dosage`, `Duration`, and `Medical History`
-at runtime without retraining. This is ideal for clinical workflows where the
-target schema changes quickly.
+at runtime without retraining. In our latest 25-sample benchmark it delivered
+near-parity extraction quality while running 3.2x faster than GPT-4o-mini.
+This is ideal for clinical workflows where the target schema changes quickly.
 
 The privacy narrative is the core of Pioneer-Med: medical transcripts should
 not need to be sent wholesale to large general-purpose LLMs when a specialized,
