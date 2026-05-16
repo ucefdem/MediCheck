@@ -4,22 +4,44 @@ import type {
   CreateRecordingResponse,
   CreateSessionPayload,
   Patient,
+  PatientSession,
   SessionDetailResponse,
   TriageResponse,
   UpdateFollowUpQuestionPayload,
   WorkspaceResponse,
 } from "../types";
 
-const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:8000";
+
+function requestTimeout(path: string) {
+  if (path === "/workspace" || path.startsWith("/sessions/")) {
+    return 8000;
+  }
+  return 45000;
+}
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${backendUrl}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), requestTimeout(path));
+
+  let response: Response;
+  try {
+    response = await fetch(`${backendUrl}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`Backend timeout: ${path}`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     throw new Error(`Backend error: ${response.status}`);
@@ -63,10 +85,11 @@ export async function createSession(
   patientId: string,
   payload: CreateSessionPayload,
 ): Promise<SessionDetailResponse> {
-  return requestJson<SessionDetailResponse>(`/patients/${patientId}/sessions`, {
+  const session = await requestJson<PatientSession>(`/patients/${patientId}/sessions`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
+  return getSession(session.id);
 }
 
 export async function createRecording(

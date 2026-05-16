@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   analyzeTriage,
   createRecording,
+  createSession,
   getSession,
   getWorkspace,
   updateFollowUpQuestion,
@@ -532,13 +533,15 @@ export default function Home() {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(true);
   const [isLoadingSession, setIsLoadingSession] = useState(false);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState("Ready");
   const [error, setError] = useState("");
+  const [newSessionTitle, setNewSessionTitle] = useState("Follow-up intake");
   const sttRef = useRef<GradiumSTT | null>(null);
 
   const selectedPatient = patients.find((patient) => patient.id === selectedPatientId) ?? null;
-  const latestAnalysis = analyses.at(-1) ?? null;
+  const latestAnalysis = analyses.length ? analyses[analyses.length - 1] : null;
   const sessionSummary = sessionDetail?.summary || "No session summary yet.";
 
   useEffect(() => {
@@ -673,8 +676,79 @@ export default function Home() {
   function selectPatient(patient: Patient) {
     setSelectedPatientId(patient.id);
     setSelectedSessionId(sortSessions(patient.sessions)[0]?.id ?? "");
+    setNewSessionTitle(`${patient.summary || "Patient"} session`);
     setTranscript("");
     setRecordingSeconds(0);
+  }
+
+  async function handleCreateSession() {
+    if (!selectedPatient) {
+      setError("Select a patient before creating a session.");
+      return;
+    }
+
+    const title = newSessionTitle.trim() || "New intake session";
+    setIsCreatingSession(true);
+    setError("");
+
+    try {
+      const detail = await createSession(selectedPatient.id, {
+        title,
+        status: "active",
+        summary: "Awaiting first recording.",
+      });
+      const createdSession = {
+        id: detail.session.id,
+        title: detail.session.title,
+        status: detail.session.status,
+        updated_at: new Date().toISOString(),
+      };
+      setPatients((items) =>
+        items.map((patient) =>
+          patient.id === selectedPatient.id
+            ? { ...patient, sessions: [createdSession, ...patient.sessions] }
+            : patient,
+        ),
+      );
+      setSelectedSessionId(detail.session.id);
+      setSessionDetail(detail.session);
+      setRecordings(detail.recordings);
+      setAnalyses(detail.analyses);
+      setFollowUpQuestions(detail.follow_up_questions);
+      setNewSessionTitle("Follow-up intake");
+    } catch (err) {
+      const fallbackSession = {
+        id: `session_${Date.now()}`,
+        title,
+        status: "active",
+        updated_at: new Date().toISOString(),
+      };
+      setPatients((items) =>
+        items.map((patient) =>
+          patient.id === selectedPatient.id
+            ? { ...patient, sessions: [fallbackSession, ...patient.sessions] }
+            : patient,
+        ),
+      );
+      setSelectedSessionId(fallbackSession.id);
+      setSessionDetail({
+        id: fallbackSession.id,
+        patient_id: selectedPatient.id,
+        title: fallbackSession.title,
+        status: fallbackSession.status,
+        summary: "Awaiting first recording.",
+      });
+      setRecordings([]);
+      setAnalyses([]);
+      setFollowUpQuestions([]);
+      setError(
+        err instanceof Error
+          ? `${err.message}. Created a local session until the backend is ready.`
+          : "Created a local session until the backend is ready.",
+      );
+    } finally {
+      setIsCreatingSession(false);
+    }
   }
 
   function stopRecording() {
@@ -904,7 +978,7 @@ export default function Home() {
                         ))
                       ) : (
                         <div className="rounded-xl border border-dashed border-zinc-200 bg-white/70 p-3 text-xs text-zinc-500">
-                          No sessions yet.
+                          No sessions yet. Create one from the workspace panel.
                         </div>
                       )}
                     </div>
@@ -952,8 +1026,30 @@ export default function Home() {
               No patient selected.
             </div>
           ) : !selectedSessionId ? (
-            <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-10 text-center text-sm text-zinc-400">
-              This patient has no session yet.
+            <div className="rounded-2xl border border-dashed border-zinc-200 bg-white p-8 text-center">
+              <p className="text-sm font-semibold text-zinc-950">
+                This patient has no session yet.
+              </p>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
+                Create an intake session to start recording, analyzing, and tracking
+                follow-up questions for {selectedPatient.name}.
+              </p>
+              <div className="mx-auto mt-5 flex max-w-md flex-col gap-3 sm:flex-row">
+                <input
+                  value={newSessionTitle}
+                  onChange={(event) => setNewSessionTitle(event.target.value)}
+                  className="min-w-0 flex-1 rounded-full border border-zinc-200 px-4 py-2.5 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                  placeholder="Session title"
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateSession}
+                  disabled={isCreatingSession}
+                  className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                >
+                  {isCreatingSession ? "Creating..." : "Create Session"}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid gap-6 xl:grid-cols-[430px_1fr]">
