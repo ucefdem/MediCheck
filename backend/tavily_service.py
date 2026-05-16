@@ -4,78 +4,65 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import Any
+from typing import Optional
 
 import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
 
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+TAVILY_URL = "https://api.tavily.com/search"
 
-KNOWN_DRUGS = {
+_FALLBACK_DRUGS = {
     "lisinopril": {
-        "indication": "ACE inhibitor commonly used for high blood pressure and heart failure.",
-        "contraindications": "Monitor potassium, kidney function, pregnancy risk, and low blood pressure.",
+        "indication": "ACE inhibitor commonly used for hypertension and heart failure.",
+        "contraindications": "Use caution with pregnancy, angioedema history, kidney impairment, and potassium-sparing drugs.",
+        "source": "demo-fallback",
     },
     "ibuprofen": {
         "indication": "NSAID used for pain, fever, and inflammation.",
-        "contraindications": "Use caution with kidney disease, anticoagulants, stomach ulcers, and some cardiac histories.",
+        "contraindications": "Use caution with kidney disease, bleeding risk, anticoagulants, heart disease, and some blood pressure medicines.",
+        "source": "demo-fallback",
     },
     "metformin": {
-        "indication": "Medication used to help control blood sugar in type 2 diabetes.",
-        "contraindications": "Use caution with significant kidney disease or risk of lactic acidosis.",
+        "indication": "Medication commonly used to manage type 2 diabetes.",
+        "contraindications": "Use caution with severe kidney impairment or conditions increasing lactic acidosis risk.",
+        "source": "demo-fallback",
     },
     "warfarin": {
-        "indication": "Anticoagulant used to prevent or treat harmful blood clots.",
-        "contraindications": "High interaction and bleeding risk; INR monitoring is required.",
-    },
-}
-
-KNOWN_MISMATCHES = {
-    "lisinopril": {
-        "treats": ["hypertension", "blood pressure", "heart failure"],
-        "not_for": ["headache", "fever", "cold", "flu"],
-    },
-    "metformin": {
-        "treats": ["diabetes", "blood sugar", "glucose"],
-        "not_for": ["pain", "headache", "fever", "infection"],
-    },
-    "warfarin": {
-        "treats": ["blood clots", "atrial fibrillation"],
-        "not_for": ["headache", "pain", "fever"],
+        "indication": "Anticoagulant used to prevent or treat blood clots.",
+        "contraindications": "High bleeding risk; many drug and food interactions require monitoring.",
+        "source": "demo-fallback",
     },
 }
 
 
-async def search_drug(drug_name: str) -> dict[str, str]:
-    """Search Tavily for drug information, with local fallback cards."""
-    fallback = KNOWN_DRUGS.get(
-        drug_name.lower(),
-        {
-            "indication": "No local medication summary is available.",
-            "contraindications": "",
-        },
-    )
+def _configured(value: str | None) -> bool:
+    return bool(value and value.strip() and "your_key_here" not in value)
 
-    if not TAVILY_API_KEY:
-        return {
-            "drug": drug_name,
-            "indication": fallback["indication"],
-            "contraindications": fallback["contraindications"],
-            "source": "",
-        }
+
+def _fallback_card(drug_name: str) -> dict:
+    known = _FALLBACK_DRUGS.get(drug_name.lower(), {})
+    return {
+        "drug": drug_name,
+        "indication": known.get("indication", f"Medication safety context for {drug_name}."),
+        "contraindications": known.get("contraindications", "Verify contraindications with a clinician or trusted medication database."),
+        "source": known.get("source", "demo-fallback"),
+    }
+
+
+async def search_drug(drug_name: str) -> dict:
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not _configured(api_key):
+        return _fallback_card(drug_name)
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
-                "https://api.tavily.com/search",
+                TAVILY_URL,
                 json={
-                    "api_key": TAVILY_API_KEY,
-                    "query": (
-                        f"What is {drug_name} used for? Include primary "
-                        "indications and key contraindications."
-                    ),
+                    "api_key": api_key,
+                    "query": f"What is {drug_name} used for? Include primary indications and common contraindications.",
                     "search_depth": "basic",
                     "max_results": 3,
                     "include_answer": True,
@@ -83,68 +70,69 @@ async def search_drug(drug_name: str) -> dict[str, str]:
             )
             response.raise_for_status()
     except Exception:
-        return {
-            "drug": drug_name,
-            "indication": fallback["indication"],
-            "contraindications": fallback["contraindications"],
-            "source": "",
-        }
+        return _fallback_card(drug_name)
 
-    data: dict[str, Any] = response.json()
-    results = data.get("results", [])
-    answer = str(data.get("answer") or "").strip()
-    content = answer or (str(results[0].get("content", "")).strip() if results else "")
-    source = str(results[0].get("url", "")) if results else ""
+    data = response.json()
+    answer = (data.get("answer") or "").strip()
+    results = data.get("results") or []
+    first_result = results[0] if results else {}
+    content = answer or (first_result.get("content") or "").strip()
+
+    if not content:
+        return _fallback_card(drug_name)
 
     return {
         "drug": drug_name,
-        "indication": content[:220] or fallback["indication"],
-        "contraindications": fallback["contraindications"],
-        "source": source,
+        "indication": content[:220],
+        "contraindications": "",
+        "source": first_result.get("url", ""),
     }
 
 
 def detect_mismatch(
-    drug: str, symptoms: list[str], medical_history: list[str] | None = None
-) -> str | None:
+    drug: str,
+    symptoms: list[str],
+    medical_history: Optional[list[str]] = None,
+) -> Optional[str]:
+    symptoms_lower = " ".join(symptoms).lower()
+    history_lower = " ".join(medical_history or []).lower()
+    context = f"{symptoms_lower} {history_lower}"
     drug_lower = drug.lower()
-    symptoms_lower = [symptom.lower() for symptom in symptoms]
-    history_lower = [item.lower() for item in medical_history or []]
 
-    if drug_lower == "ibuprofen" and any("bypass" in item for item in history_lower):
-        return (
-            "Ibuprofen may increase cardiovascular or kidney risk in some "
-            "post-bypass patients. Verify this medication history with the patient."
-        )
+    if drug_lower == "lisinopril" and any(word in symptoms_lower for word in ["headache", "pain", "fever"]):
+        return "Lisinopril is typically used for blood pressure or heart failure, not pain symptoms. Verify the patient history."
 
-    if drug_lower not in KNOWN_MISMATCHES:
-        return None
+    if drug_lower == "ibuprofen" and any(word in context for word in ["chest pain", "heart", "bypass"]):
+        return "Ibuprofen can be risky in some cardiovascular histories and may interact with blood pressure treatment. Review before use."
 
-    rules = KNOWN_MISMATCHES[drug_lower]
-    for symptom in symptoms_lower:
-        for not_for in rules["not_for"]:
-            if not_for in symptom:
-                treats = ", ".join(rules["treats"][:2])
-                return (
-                    f"{drug} is typically used for {treats}, not {symptom}. "
-                    "Verify this medication history with the patient."
-                )
+    if drug_lower == "warfarin" and any(word in symptoms_lower for word in ["bleeding", "bruise", "fall"]):
+        return "Warfarin increases bleeding risk. Escalate medication reconciliation."
+
     return None
 
 
 async def verify_medications(
-    medications: list[str], symptoms: list[str], medical_history: list[str] | None = None
-) -> list[dict[str, str | None]]:
-    """Verify all medications concurrently."""
-
-    async def process_one(drug: str) -> dict[str, str | None]:
-        result = await search_drug(drug)
+    medications: list[str],
+    symptoms: list[str],
+    medical_history: Optional[list[str]] = None,
+) -> list[dict]:
+    async def process_one(drug: str) -> dict:
+        card = await search_drug(drug)
+        warning = detect_mismatch(drug, symptoms, medical_history)
         return {
-            "drug": drug,
-            "indication": result["indication"],
-            "contraindications": result["contraindications"],
-            "warning": detect_mismatch(drug, symptoms, medical_history),
-            "source": result["source"],
+            "drug": card.get("drug", drug),
+            "indication": card.get("indication", ""),
+            "contraindications": card.get("contraindications", ""),
+            "warning": warning,
+            "source": card.get("source", ""),
         }
 
-    return list(await asyncio.gather(*(process_one(drug) for drug in medications)))
+    unique_medications = []
+    seen = set()
+    for medication in medications:
+        key = medication.lower().strip()
+        if key and key not in seen:
+            unique_medications.append(medication.strip())
+            seen.add(key)
+
+    return list(await asyncio.gather(*(process_one(drug) for drug in unique_medications)))

@@ -1,2 +1,777 @@
-[]
-
+[
+  {
+    "id": 1,
+    "transcript": "Um, I've had chest pain for three days, mostly on the left side. I take 50 milligrams of Lisinopril every morning and ibuprofen when it gets bad. I had bypass surgery in 2019.",
+    "ground_truth": {
+      "Symptom": [
+        "chest pain"
+      ],
+      "Medication": [
+        "Lisinopril",
+        "ibuprofen"
+      ],
+      "Dosage": [
+        "50 milligrams"
+      ],
+      "Medical History": [
+        "bypass surgery"
+      ],
+      "Anatomical Site": [
+        "left side"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "every morning"
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "transcript": "So I feel dizzy and nauseous after lunch, maybe for about two weeks. I'm on Metformin 500mg twice daily, and I had my gallbladder removed years ago.",
+    "ground_truth": {
+      "Symptom": [
+        "dizzy",
+        "nauseous"
+      ],
+      "Medication": [
+        "Metformin"
+      ],
+      "Dosage": [
+        "500mg"
+      ],
+      "Medical History": [
+        "gallbladder removed"
+      ],
+      "Anatomical Site": [],
+      "Duration": [
+        "two weeks"
+      ],
+      "Frequency": [
+        "twice daily"
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "transcript": "I've been coughing all night and wheezing in my chest since Monday. I use Albuterol two puffs as needed, and I have asthma from childhood.",
+    "ground_truth": {
+      "Symptom": [
+        "coughing",
+        "wheezing"
+      ],
+      "Medication": [
+        "Albuterol"
+      ],
+      "Dosage": [
+        "two puffs"
+      ],
+      "Medical History": [
+        "asthma"
+      ],
+      "Anatomical Site": [
+        "chest"
+      ],
+      "Duration": [
+        "since Monday"
+      ],
+      "Frequency": [
+        "as needed"
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "transcript": "My right leg has been swollen for a week, and it hurts when I walk. I take Warfarin 5 mg nightly because I had a blood clot last year.",
+    "ground_truth": {
+      "Symptom": [
+        "swollen",
+        "hurts"
+      ],
+      "Medication": [
+        "Warfarin"
+      ],
+      "Dosage": [
+        "5 mg"
+      ],
+      "Medical History": [
+        "blood clot"
+      ],
+      "Anatomical Site": [
+        "right leg"
+      ],
+      "Duration": [
+        "a week",
+        "last year"
+      ],
+      "Frequency": [
+        "nightly"
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "transcript": "I keep getting headaches and blurred vision in the morning. I take Atorvastatin 20mg daily and aspirin 81mg, and I had a stroke in 2020.",
+    "ground_truth": {
+      "Symptom": [
+        "headaches",
+        "blurred vision"
+      ],
+      "Medication": [
+        "Atorvastatin",
+        "aspirin"
+      ],
+      "Dosage": [
+        "20mg",
+        "81mg"
+      ],
+      "Medical History": [
+        "stroke"
+      ],
+      "Anatomical Site": [],
+      "Duration": [],
+      "Frequency": [
+        "daily",
+        "in the morning"
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "transcript": "Uh, I guess I've had chest pressure and also numbness in my left arm for two months. I take 20mg of Atorvastatin daily, and sometimes 10mg Lisinopril every morning. I should mention I had appendix surgery years ago.",
+    "ground_truth": {
+      "Symptom": [
+        "chest pressure",
+        "numbness in my left arm"
+      ],
+      "Medication": [
+        "Atorvastatin",
+        "Lisinopril"
+      ],
+      "Dosage": [
+        "20mg",
+        "10mg"
+      ],
+      "Medical History": [
+        "appendix surgery years ago"
+      ],
+      "Anatomical Site": [
+        "chest",
+        "left arm"
+      ],
+      "Duration": [
+        "two months"
+      ],
+      "Frequency": [
+        "daily",
+        "every morning"
+      ]
+    }
+  },
+  {
+    "id": 7,
+    "transcript": "Uh, I guess I've had shortness of breath and also chest pressure for three days. I take 875mg of Amoxicillin twice daily, and sometimes 20mg Atorvastatin daily. I should mention I had type 2 diabetes.",
+    "ground_truth": {
+      "Symptom": [
+        "shortness of breath",
+        "chest pressure"
+      ],
+      "Medication": [
+        "Amoxicillin",
+        "Atorvastatin"
+      ],
+      "Dosage": [
+        "875mg",
+        "20mg"
+      ],
+      "Medical History": [
+        "type 2 diabetes"
+      ],
+      "Anatomical Site": [
+        "chest",
+        "chest"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "twice daily",
+        "daily"
+      ]
+    }
+  },
+  {
+    "id": 8,
+    "transcript": "Uh, I guess I've had chest pressure and also bad headache for three days. I take 10mg of Lisinopril every morning, and sometimes 875mg Amoxicillin twice daily. I should mention I had asthma since childhood.",
+    "ground_truth": {
+      "Symptom": [
+        "chest pressure",
+        "bad headache"
+      ],
+      "Medication": [
+        "Lisinopril",
+        "Amoxicillin"
+      ],
+      "Dosage": [
+        "10mg",
+        "875mg"
+      ],
+      "Medical History": [
+        "asthma since childhood"
+      ],
+      "Anatomical Site": [
+        "chest",
+        "head"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "every morning",
+        "twice daily"
+      ]
+    }
+  },
+  {
+    "id": 9,
+    "transcript": "Uh, I guess I've had fever and chills and also chest pressure for three days. I take 500mg of Metformin twice daily, and sometimes 875mg Amoxicillin twice daily. I should mention I had asthma since childhood.",
+    "ground_truth": {
+      "Symptom": [
+        "fever and chills",
+        "chest pressure"
+      ],
+      "Medication": [
+        "Metformin",
+        "Amoxicillin"
+      ],
+      "Dosage": [
+        "500mg",
+        "875mg"
+      ],
+      "Medical History": [
+        "asthma since childhood"
+      ],
+      "Anatomical Site": [
+        "chest"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "twice daily",
+        "twice daily"
+      ]
+    }
+  },
+  {
+    "id": 10,
+    "transcript": "Uh, I guess I've had sharp stomach pain and also shortness of breath for three days. I take 400mg of Ibuprofen as needed, and sometimes 10mg Lisinopril every morning. I should mention I had kidney disease.",
+    "ground_truth": {
+      "Symptom": [
+        "sharp stomach pain",
+        "shortness of breath"
+      ],
+      "Medication": [
+        "Ibuprofen",
+        "Lisinopril"
+      ],
+      "Dosage": [
+        "400mg",
+        "10mg"
+      ],
+      "Medical History": [
+        "kidney disease"
+      ],
+      "Anatomical Site": [
+        "stomach",
+        "chest"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "as needed",
+        "every morning"
+      ]
+    }
+  },
+  {
+    "id": 11,
+    "transcript": "Uh, I guess I've had bad headache and also sharp stomach pain for about a week. I take 400mg of Ibuprofen as needed, and sometimes 10mg Lisinopril every morning. I should mention I had appendix surgery years ago.",
+    "ground_truth": {
+      "Symptom": [
+        "bad headache",
+        "sharp stomach pain"
+      ],
+      "Medication": [
+        "Ibuprofen",
+        "Lisinopril"
+      ],
+      "Dosage": [
+        "400mg",
+        "10mg"
+      ],
+      "Medical History": [
+        "appendix surgery years ago"
+      ],
+      "Anatomical Site": [
+        "head",
+        "stomach"
+      ],
+      "Duration": [
+        "about a week"
+      ],
+      "Frequency": [
+        "as needed",
+        "every morning"
+      ]
+    }
+  },
+  {
+    "id": 12,
+    "transcript": "Uh, I guess I've had fever and chills and also numbness in my left arm for three days. I take 20mg of Atorvastatin daily, and sometimes 10mg Lisinopril every morning. I should mention I had a stroke in 2020.",
+    "ground_truth": {
+      "Symptom": [
+        "fever and chills",
+        "numbness in my left arm"
+      ],
+      "Medication": [
+        "Atorvastatin",
+        "Lisinopril"
+      ],
+      "Dosage": [
+        "20mg",
+        "10mg"
+      ],
+      "Medical History": [
+        "a stroke in 2020"
+      ],
+      "Anatomical Site": [
+        "left arm"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "daily",
+        "every morning"
+      ]
+    }
+  },
+  {
+    "id": 13,
+    "transcript": "Uh, I guess I've had chest pressure and also bad headache for about a week. I take 400mg of Ibuprofen as needed, and sometimes 5 mg Warfarin nightly. I should mention I had type 2 diabetes.",
+    "ground_truth": {
+      "Symptom": [
+        "chest pressure",
+        "bad headache"
+      ],
+      "Medication": [
+        "Ibuprofen",
+        "Warfarin"
+      ],
+      "Dosage": [
+        "400mg",
+        "5 mg"
+      ],
+      "Medical History": [
+        "type 2 diabetes"
+      ],
+      "Anatomical Site": [
+        "chest",
+        "head"
+      ],
+      "Duration": [
+        "about a week"
+      ],
+      "Frequency": [
+        "as needed",
+        "nightly"
+      ]
+    }
+  },
+  {
+    "id": 14,
+    "transcript": "Uh, I guess I've had bad headache and also bad headache for two months. I take 20mg of Atorvastatin daily, and sometimes 500mg Metformin twice daily. I should mention I had bypass surgery in 2019.",
+    "ground_truth": {
+      "Symptom": [
+        "bad headache",
+        "bad headache"
+      ],
+      "Medication": [
+        "Atorvastatin",
+        "Metformin"
+      ],
+      "Dosage": [
+        "20mg",
+        "500mg"
+      ],
+      "Medical History": [
+        "bypass surgery in 2019"
+      ],
+      "Anatomical Site": [
+        "head",
+        "head"
+      ],
+      "Duration": [
+        "two months"
+      ],
+      "Frequency": [
+        "daily",
+        "twice daily"
+      ]
+    }
+  },
+  {
+    "id": 15,
+    "transcript": "Uh, I guess I've had shortness of breath and also dizziness for since yesterday. I take 5 mg of Warfarin nightly, and sometimes 5 mg Warfarin nightly. I should mention I had appendix surgery years ago.",
+    "ground_truth": {
+      "Symptom": [
+        "shortness of breath",
+        "dizziness"
+      ],
+      "Medication": [
+        "Warfarin",
+        "Warfarin"
+      ],
+      "Dosage": [
+        "5 mg",
+        "5 mg"
+      ],
+      "Medical History": [
+        "appendix surgery years ago"
+      ],
+      "Anatomical Site": [
+        "chest",
+        "head"
+      ],
+      "Duration": [
+        "since yesterday"
+      ],
+      "Frequency": [
+        "nightly",
+        "nightly"
+      ]
+    }
+  },
+  {
+    "id": 16,
+    "transcript": "Uh, I guess I've had chest pressure and also numbness in my left arm for three days. I take 10mg of Lisinopril every morning, and sometimes 10mg Lisinopril every morning. I should mention I had appendix surgery years ago.",
+    "ground_truth": {
+      "Symptom": [
+        "chest pressure",
+        "numbness in my left arm"
+      ],
+      "Medication": [
+        "Lisinopril",
+        "Lisinopril"
+      ],
+      "Dosage": [
+        "10mg",
+        "10mg"
+      ],
+      "Medical History": [
+        "appendix surgery years ago"
+      ],
+      "Anatomical Site": [
+        "chest",
+        "left arm"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "every morning",
+        "every morning"
+      ]
+    }
+  },
+  {
+    "id": 17,
+    "transcript": "Uh, I guess I've had sharp stomach pain and also fever and chills for two months. I take 500mg of Metformin twice daily, and sometimes 10mg Lisinopril every morning. I should mention I had appendix surgery years ago.",
+    "ground_truth": {
+      "Symptom": [
+        "sharp stomach pain",
+        "fever and chills"
+      ],
+      "Medication": [
+        "Metformin",
+        "Lisinopril"
+      ],
+      "Dosage": [
+        "500mg",
+        "10mg"
+      ],
+      "Medical History": [
+        "appendix surgery years ago"
+      ],
+      "Anatomical Site": [
+        "stomach"
+      ],
+      "Duration": [
+        "two months"
+      ],
+      "Frequency": [
+        "twice daily",
+        "every morning"
+      ]
+    }
+  },
+  {
+    "id": 18,
+    "transcript": "Uh, I guess I've had sharp stomach pain and also bad headache for since yesterday. I take 400mg of Ibuprofen as needed, and sometimes 875mg Amoxicillin twice daily. I should mention I had asthma since childhood.",
+    "ground_truth": {
+      "Symptom": [
+        "sharp stomach pain",
+        "bad headache"
+      ],
+      "Medication": [
+        "Ibuprofen",
+        "Amoxicillin"
+      ],
+      "Dosage": [
+        "400mg",
+        "875mg"
+      ],
+      "Medical History": [
+        "asthma since childhood"
+      ],
+      "Anatomical Site": [
+        "stomach",
+        "head"
+      ],
+      "Duration": [
+        "since yesterday"
+      ],
+      "Frequency": [
+        "as needed",
+        "twice daily"
+      ]
+    }
+  },
+  {
+    "id": 19,
+    "transcript": "Uh, I guess I've had lower back pain and also shortness of breath for about a week. I take 500mg of Metformin twice daily, and sometimes 400mg Ibuprofen as needed. I should mention I had a stroke in 2020.",
+    "ground_truth": {
+      "Symptom": [
+        "lower back pain",
+        "shortness of breath"
+      ],
+      "Medication": [
+        "Metformin",
+        "Ibuprofen"
+      ],
+      "Dosage": [
+        "500mg",
+        "400mg"
+      ],
+      "Medical History": [
+        "a stroke in 2020"
+      ],
+      "Anatomical Site": [
+        "back",
+        "chest"
+      ],
+      "Duration": [
+        "about a week"
+      ],
+      "Frequency": [
+        "twice daily",
+        "as needed"
+      ]
+    }
+  },
+  {
+    "id": 20,
+    "transcript": "Uh, I guess I've had bad headache and also lower back pain for since yesterday. I take 500mg of Metformin twice daily, and sometimes 20mg Atorvastatin daily. I should mention I had appendix surgery years ago.",
+    "ground_truth": {
+      "Symptom": [
+        "bad headache",
+        "lower back pain"
+      ],
+      "Medication": [
+        "Metformin",
+        "Atorvastatin"
+      ],
+      "Dosage": [
+        "500mg",
+        "20mg"
+      ],
+      "Medical History": [
+        "appendix surgery years ago"
+      ],
+      "Anatomical Site": [
+        "head",
+        "back"
+      ],
+      "Duration": [
+        "since yesterday"
+      ],
+      "Frequency": [
+        "twice daily",
+        "daily"
+      ]
+    }
+  },
+  {
+    "id": 21,
+    "transcript": "Uh, I guess I've had numbness in my left arm and also numbness in my left arm for about a week. I take 875mg of Amoxicillin twice daily, and sometimes 5 mg Warfarin nightly. I should mention I had type 2 diabetes.",
+    "ground_truth": {
+      "Symptom": [
+        "numbness in my left arm",
+        "numbness in my left arm"
+      ],
+      "Medication": [
+        "Amoxicillin",
+        "Warfarin"
+      ],
+      "Dosage": [
+        "875mg",
+        "5 mg"
+      ],
+      "Medical History": [
+        "type 2 diabetes"
+      ],
+      "Anatomical Site": [
+        "left arm",
+        "left arm"
+      ],
+      "Duration": [
+        "about a week"
+      ],
+      "Frequency": [
+        "twice daily",
+        "nightly"
+      ]
+    }
+  },
+  {
+    "id": 22,
+    "transcript": "Uh, I guess I've had sharp stomach pain and also sharp stomach pain for three days. I take 875mg of Amoxicillin twice daily, and sometimes 500mg Metformin twice daily. I should mention I had bypass surgery in 2019.",
+    "ground_truth": {
+      "Symptom": [
+        "sharp stomach pain",
+        "sharp stomach pain"
+      ],
+      "Medication": [
+        "Amoxicillin",
+        "Metformin"
+      ],
+      "Dosage": [
+        "875mg",
+        "500mg"
+      ],
+      "Medical History": [
+        "bypass surgery in 2019"
+      ],
+      "Anatomical Site": [
+        "stomach",
+        "stomach"
+      ],
+      "Duration": [
+        "three days"
+      ],
+      "Frequency": [
+        "twice daily",
+        "twice daily"
+      ]
+    }
+  },
+  {
+    "id": 23,
+    "transcript": "Uh, I guess I've had numbness in my left arm and also shortness of breath for since yesterday. I take 10mg of Lisinopril every morning, and sometimes 5 mg Warfarin nightly. I should mention I had type 2 diabetes.",
+    "ground_truth": {
+      "Symptom": [
+        "numbness in my left arm",
+        "shortness of breath"
+      ],
+      "Medication": [
+        "Lisinopril",
+        "Warfarin"
+      ],
+      "Dosage": [
+        "10mg",
+        "5 mg"
+      ],
+      "Medical History": [
+        "type 2 diabetes"
+      ],
+      "Anatomical Site": [
+        "left arm",
+        "chest"
+      ],
+      "Duration": [
+        "since yesterday"
+      ],
+      "Frequency": [
+        "every morning",
+        "nightly"
+      ]
+    }
+  },
+  {
+    "id": 24,
+    "transcript": "Uh, I guess I've had numbness in my left arm and also sharp stomach pain for since yesterday. I take 5 mg of Warfarin nightly, and sometimes 875mg Amoxicillin twice daily. I should mention I had bypass surgery in 2019.",
+    "ground_truth": {
+      "Symptom": [
+        "numbness in my left arm",
+        "sharp stomach pain"
+      ],
+      "Medication": [
+        "Warfarin",
+        "Amoxicillin"
+      ],
+      "Dosage": [
+        "5 mg",
+        "875mg"
+      ],
+      "Medical History": [
+        "bypass surgery in 2019"
+      ],
+      "Anatomical Site": [
+        "left arm",
+        "stomach"
+      ],
+      "Duration": [
+        "since yesterday"
+      ],
+      "Frequency": [
+        "nightly",
+        "twice daily"
+      ]
+    }
+  },
+  {
+    "id": 25,
+    "transcript": "Uh, I guess I've had lower back pain and also chest pressure for two months. I take 20mg of Atorvastatin daily, and sometimes 20mg Atorvastatin daily. I should mention I had a stroke in 2020.",
+    "ground_truth": {
+      "Symptom": [
+        "lower back pain",
+        "chest pressure"
+      ],
+      "Medication": [
+        "Atorvastatin",
+        "Atorvastatin"
+      ],
+      "Dosage": [
+        "20mg",
+        "20mg"
+      ],
+      "Medical History": [
+        "a stroke in 2020"
+      ],
+      "Anatomical Site": [
+        "back",
+        "chest"
+      ],
+      "Duration": [
+        "two months"
+      ],
+      "Frequency": [
+        "daily",
+        "daily"
+      ]
+    }
+  }
+]

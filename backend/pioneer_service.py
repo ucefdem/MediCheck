@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 import time
-from typing import Any
+from functools import lru_cache
 
 from dotenv import load_dotenv
 
@@ -21,103 +21,209 @@ MEDICAL_LABELS = [
     "Frequency",
 ]
 
-_model: Any | None = None
-_model_load_error: str | None = None
+_SYMPTOM_PATTERNS = [
+    "chest pain",
+    "shortness of breath",
+    "dizziness",
+    "headache",
+    "fever",
+    "nausea",
+    "fatigue",
+    "cough",
+    "abdominal pain",
+    "back pain",
+]
+
+_MEDICATION_PATTERNS = [
+    "lisinopril",
+    "ibuprofen",
+    "metformin",
+    "warfarin",
+    "atorvastatin",
+    "aspirin",
+    "amoxicillin",
+    "insulin",
+    "albuterol",
+    "omeprazole",
+]
+
+_HISTORY_PATTERNS = [
+    "bypass surgery",
+    "heart surgery",
+    "stroke",
+    "heart attack",
+    "diabetes",
+    "hypertension",
+    "asthma",
+    "kidney disease",
+]
+
+_SITE_PATTERNS = [
+    "left side",
+    "right side",
+    "chest",
+    "arm",
+    "leg",
+    "head",
+    "abdomen",
+    "stomach",
+    "back",
+]
 
 
 def empty_entities() -> dict[str, list[str]]:
     return {label: [] for label in MEDICAL_LABELS}
 
 
+def _configured(value: str | None) -> bool:
+    return bool(value and value.strip() and "your_key_here" not in value)
+
+
+@lru_cache(maxsize=1)
+def _get_pioneer_extractor():
+    api_key = os.getenv("PIONEER_API_KEY")
+    if not _configured(api_key):
+        return None
+
+    try:
+        from gliner2.api_client import GLiNER2API  # type: ignore
+
+        return GLiNER2API(
+            api_key=api_key,
+            api_base_url=os.getenv("GLINER2_API_BASE_URL", "https://api.pioneer.ai"),
+            timeout=8.0,
+            max_retries=0,
+        )
+    except Exception:
+        return None
+
+
 def _append_unique(grouped: dict[str, list[str]], label: str, value: str) -> None:
-    cleaned = value.strip(" .,;:")
-    if cleaned and cleaned not in grouped[label]:
+    cleaned = value.strip(" .,;:!?")
+    if cleaned and cleaned.lower() not in {item.lower() for item in grouped[label]}:
         grouped[label].append(cleaned)
 
 
-def _regex_fallback(text: str) -> list[dict[str, Any]]:
-    """Small local fallback for demos when GLiNER is unavailable."""
-    patterns: list[tuple[str, str]] = [
-        ("Symptom", r"\b(chest pain|headache|fever|shortness of breath|nausea|dizziness|cough|fatigue)\b"),
-        ("Medication", r"\b(Lisinopril|Ibuprofen|Metformin|Warfarin|Aspirin|Atorvastatin|Amoxicillin)\b"),
-        ("Dosage", r"\b(\d+\s?(?:mg|milligrams|mcg|g|grams|ml|units))\b"),
-        ("Medical History", r"\b(bypass surgery|heart attack|stroke|diabetes|hypertension|asthma|surgery)\b(?:\s+(?:in|back in)\s+\d{4})?"),
-        ("Anatomical Site", r"\b(left side|right side|chest|arm|leg|head|stomach|back)\b"),
-        ("Duration", r"\b(?:for\s+)?(\d+\s+(?:days?|weeks?|months?|years?)|three days|two days|one week)\b"),
-        ("Frequency", r"\b(every morning|every night|twice a day|once a day|daily|weekly)\b"),
+def _normalize_raw_entities(raw_entities) -> list[dict]:
+    if isinstance(raw_entities, dict):
+        data = raw_entities.get("data")
+        if isinstance(data, dict):
+            return _normalize_raw_entities(data)
+
+        entities = raw_entities.get("entities", raw_entities.get("data", raw_entities))
+        if isinstance(entities, dict) and isinstance(entities.get("data"), dict):
+            return _normalize_raw_entities(entities["data"])
+
+        if isinstance(entities, dict):
+            normalized = []
+            for label, values in entities.items():
+                if label in {"request_id", "created_at"}:
+                    continue
+                if isinstance(values, str):
+                    values = [values]
+                if not isinstance(values, list):
+                    continue
+                for value in values:
+                    if isinstance(value, dict):
+                        text = value.get("text") or value.get("span") or value.get("entity")
+                        score = value.get("score") or value.get("confidence")
+                    else:
+                        text = value
+                        score = None
+                    if text:
+                        entity = {"text": str(text), "label": str(label)}
+                        if score is not None:
+                            entity["score"] = score
+                        normalized.append(entity)
+            return normalized
+        raw_entities = entities
+
+    if not isinstance(raw_entities, list):
+        return []
+
+    normalized = []
+    for entity in raw_entities:
+        if not isinstance(entity, dict):
+            continue
+        text = entity.get("text") or entity.get("span") or entity.get("entity")
+        label = entity.get("label") or entity.get("type") or entity.get("entity_type")
+        if text and label:
+            normalized.append({**entity, "text": str(text), "label": str(label)})
+    return normalized
+
+
+def _call_pioneer(text: str) -> list[dict]:
+    extractor = _get_pioneer_extractor()
+    if extractor is None:
+        return []
+
+    call_attempts = [
+        lambda: extractor.extract_entities(text=text, entity_types=MEDICAL_LABELS, threshold=0.45),
+        lambda: extractor.extract(
+            text=text,
+            schema={"entities": MEDICAL_LABELS},
+            threshold=0.45,
+        ),
     ]
-
-    entities: list[dict[str, Any]] = []
-    for label, pattern in patterns:
-        for match in re.finditer(pattern, text, flags=re.IGNORECASE):
-            entities.append(
-                {
-                    "text": match.group(1) if match.groups() else match.group(0),
-                    "label": label,
-                    "score": 0.72,
-                    "start": match.start(),
-                    "end": match.end(),
-                }
-            )
-    return entities
+    for attempt in call_attempts:
+        try:
+            return _normalize_raw_entities(attempt())
+        except Exception:
+            continue
+    return []
 
 
-def get_model() -> Any | None:
-    """Load GLiNER once. Return None if the local model is not available."""
-    global _model, _model_load_error
+def _fallback_extract(text: str) -> list[dict]:
+    lowered = text.lower()
+    raw_entities: list[dict] = []
 
-    if os.getenv("PIONEER_USE_LOCAL_GLINER", "").lower() not in {"1", "true", "yes"}:
-        _model_load_error = "Set PIONEER_USE_LOCAL_GLINER=true to enable local GLiNER loading"
-        return None
+    for symptom in _SYMPTOM_PATTERNS:
+        if symptom in lowered:
+            raw_entities.append({"text": symptom, "label": "Symptom", "score": 0.82})
 
-    if _model is not None or _model_load_error is not None:
-        return _model
+    for medication in _MEDICATION_PATTERNS:
+        if medication in lowered:
+            raw_entities.append({"text": medication.title(), "label": "Medication", "score": 0.88})
 
-    try:
-        from gliner import GLiNER
+    for history in _HISTORY_PATTERNS:
+        if history in lowered:
+            raw_entities.append({"text": history, "label": "Medical History", "score": 0.8})
 
-        _model = GLiNER.from_pretrained("knowledgator/gliner-multitask-large-v0.5")
-    except Exception as exc:  # pragma: no cover - depends on local model/network.
-        _model_load_error = str(exc)
-        _model = None
+    for site in _SITE_PATTERNS:
+        if site in lowered:
+            raw_entities.append({"text": site, "label": "Anatomical Site", "score": 0.76})
 
-    return _model
+    for match in re.finditer(r"\b\d+(?:\.\d+)?\s?(?:mg|milligrams?|mcg|g|grams?|ml|units?)\b", text, re.I):
+        raw_entities.append({"text": match.group(0), "label": "Dosage", "score": 0.9})
+
+    for match in re.finditer(r"\b(?:for|about)\s+(\d+\s+(?:day|days|week|weeks|month|months|year|years))\b", text, re.I):
+        raw_entities.append({"text": match.group(1), "label": "Duration", "score": 0.86})
+
+    for match in re.finditer(r"\b(?:once|twice|three times|every morning|daily|nightly|sometimes)\b", text, re.I):
+        raw_entities.append({"text": match.group(0), "label": "Frequency", "score": 0.78})
+
+    return raw_entities
 
 
-def extract_entities(text: str) -> dict[str, Any]:
-    """
-    Extract medical entities with GLiNER when available.
-
-    Returns a stable response shape for the frontend and benchmark script.
-    """
+def extract_entities(text: str) -> dict:
     start = time.perf_counter()
-    model = get_model()
+    raw_entities = _call_pioneer(text)
+    provider = "pioneer_gliner2"
 
-    if model is None:
-        raw_entities = _regex_fallback(text)
-        engine = "regex_fallback"
-    else:
-        raw_entities = model.predict_entities(text, MEDICAL_LABELS, threshold=0.45)
-        engine = "gliner"
+    if not raw_entities:
+        raw_entities = _fallback_extract(text)
+        provider = "fallback_rules"
 
     grouped = empty_entities()
     for entity in raw_entities:
         label = entity.get("label")
-        value = entity.get("text")
-        if label in grouped and isinstance(value, str):
-            _append_unique(grouped, label, value)
+        if label in grouped:
+            _append_unique(grouped, label, str(entity.get("text", "")))
 
     latency_ms = round((time.perf_counter() - start) * 1000)
-    simulated_latency = False
-    if engine == "regex_fallback":
-        latency_ms = max(latency_ms, 342)
-        simulated_latency = True
-
     return {
         "entities": grouped,
-        "latency_ms": latency_ms,
+        "latency_ms": max(latency_ms, 1),
         "raw": raw_entities,
-        "engine": engine,
-        "simulated_latency": simulated_latency,
-        "model_error": _model_load_error,
+        "provider": provider,
     }

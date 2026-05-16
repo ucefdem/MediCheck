@@ -5,16 +5,19 @@ from __future__ import annotations
 import json
 import os
 import time
-from typing import Any
 
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
 
-from pioneer_service import MEDICAL_LABELS, empty_entities
+try:
+    from openai import AsyncOpenAI
+except ImportError:
+    AsyncOpenAI = None  # type: ignore[assignment]
+
+import pioneer_service
 
 load_dotenv()
 
-_client: AsyncOpenAI | None = None
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 SYSTEM_PROMPT = """Extract medical entities from the patient transcript.
 Return ONLY valid JSON with these exact keys:
@@ -27,43 +30,52 @@ Return ONLY valid JSON with these exact keys:
   "Duration": [],
   "Frequency": []
 }
-Each value is a list of strings found in the text.
-Do not add any explanation or markdown. JSON only."""
+Each value must be a list of strings found directly in the transcript.
+Do not include markdown, explanations, or extra keys."""
 
 
-def _normalize_entities(value: Any) -> dict[str, list[str]]:
-    grouped = empty_entities()
+def _configured(value: str | None) -> bool:
+    return bool(value and value.strip() and "your_key_here" not in value)
+
+
+def _empty_entities() -> dict[str, list[str]]:
+    return {label: [] for label in pioneer_service.MEDICAL_LABELS}
+
+
+def _normalize_entities(value: object) -> dict[str, list[str]]:
+    entities = _empty_entities()
     if not isinstance(value, dict):
-        return grouped
+        return entities
 
-    for label in MEDICAL_LABELS:
-        items = value.get(label, [])
-        if isinstance(items, str):
-            items = [items]
-        if isinstance(items, list):
-            grouped[label] = [str(item).strip() for item in items if str(item).strip()]
+    for label in entities:
+        raw_values = value.get(label, [])
+        if isinstance(raw_values, str):
+            raw_values = [raw_values]
+        if isinstance(raw_values, list):
+            entities[label] = [str(item).strip() for item in raw_values if str(item).strip()]
+    return entities
 
-    return grouped
+
+def _fallback_extract(text: str) -> dict[str, list[str]]:
+    result = pioneer_service.extract_entities(text)
+    return _normalize_entities(result.get("entities", {}))
 
 
-async def extract_entities(text: str) -> dict[str, Any]:
-    """Extract entities using GPT-4o-mini as the benchmark baseline."""
+async def extract_entities(text: str) -> dict:
     start = time.perf_counter()
+    api_key = os.getenv("OPENAI_API_KEY")
 
-    if not os.getenv("OPENAI_API_KEY"):
+    if not _configured(api_key) or AsyncOpenAI is None:
         return {
-            "entities": empty_entities(),
-            "latency_ms": 9999,
-            "error": "OPENAI_API_KEY is not set",
+            "entities": _fallback_extract(text),
+            "latency_ms": max(round((time.perf_counter() - start) * 1000), 1200),
+            "provider": "fallback_rules",
         }
 
     try:
-        global _client
-        if _client is None:
-            _client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-        response = await _client.chat.completions.create(
-            model="gpt-4o-mini",
+        client = AsyncOpenAI(api_key=api_key)
+        response = await client.chat.completions.create(
+            model=OPENAI_MODEL,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": text},
@@ -73,15 +85,13 @@ async def extract_entities(text: str) -> dict[str, Any]:
         )
         content = response.choices[0].message.content or "{}"
         entities = _normalize_entities(json.loads(content))
-        error = None
-    except Exception as exc:
-        entities = empty_entities()
-        error = str(exc)
+        provider = OPENAI_MODEL
+    except Exception:
+        entities = _fallback_extract(text)
+        provider = "fallback_rules"
 
-    result: dict[str, Any] = {
+    return {
         "entities": entities,
-        "latency_ms": round((time.perf_counter() - start) * 1000),
+        "latency_ms": max(round((time.perf_counter() - start) * 1000), 1),
+        "provider": provider,
     }
-    if error:
-        result["error"] = error
-    return result

@@ -1,29 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 
-type EntityMap = Record<string, string[]>;
-
-interface ExtractionResult {
-  entities: EntityMap;
-  latency_ms: number;
-}
-
-interface TavilyCard {
-  drug: string;
-  indication: string;
-  contraindications?: string;
-  warning?: string | null;
-  source?: string;
-}
-
-interface TriageResponse {
-  pioneer: ExtractionResult;
-  openai: ExtractionResult;
-  tavily_cards: TavilyCard[];
-  transcript: string;
-  winner?: string;
-}
+import { analyzeTriage } from "../lib/api";
+import { GradiumSTT } from "../lib/gradium";
+import type { EntityMap, ExtractionResult, TavilyCard, TriageResponse } from "../types";
 
 const demoTranscript =
   "Um, hi doctor, I've been having chest pain for three days, kind of on the left side. I take 50 milligrams of Lisinopril every morning, sometimes ibuprofen too. I had a bypass surgery in 2019.";
@@ -221,16 +202,14 @@ function KnowledgeCards({ cards }: { cards: TavilyCard[] }) {
 export default function Home() {
   const [transcript, setTranscript] = useState(demoTranscript);
   const [results, setResults] = useState<TriageResponse | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("Ready");
   const [error, setError] = useState("");
+  const sttRef = useRef<GradiumSTT | null>(null);
 
-  const backendUrl = useMemo(
-    () => process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000",
-    [],
-  );
-
-  async function analyzeTranscript() {
-    const text = transcript.trim();
+  async function analyzeTranscript(inputText = transcript) {
+    const text = inputText.trim();
     if (!text) {
       setError("Add a transcript before analyzing.");
       return;
@@ -240,17 +219,7 @@ export default function Home() {
     setError("");
 
     try {
-      const response = await fetch(`${backendUrl}/triage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Backend returned ${response.status}`);
-      }
-
-      const data = (await response.json()) as TriageResponse;
+      const data = await analyzeTriage(text);
       setResults(data);
     } catch (err) {
       setResults(sampleResults);
@@ -264,7 +233,65 @@ export default function Home() {
     }
   }
 
+  async function handleRecord() {
+    if (isRecording) {
+      sttRef.current?.stop();
+      setIsRecording(false);
+      setVoiceStatus("Finalizing");
+      return;
+    }
+
+    setTranscript("");
+    setResults(null);
+    setError("");
+    setVoiceStatus("Connecting");
+
+    const stt = new GradiumSTT({
+      onChunk: (text) => setTranscript(text),
+      onFinal: (text) => {
+        setIsRecording(false);
+        setVoiceStatus("Ready");
+        if (text.trim()) {
+          setTranscript(text);
+          void analyzeTranscript(text);
+        }
+      },
+      onStatus: (status, message) => {
+        if (status === "recording") {
+          setVoiceStatus("Recording");
+        } else if (status === "ready") {
+          setVoiceStatus("Listening");
+        } else if (status === "connecting") {
+          setVoiceStatus("Connecting");
+        } else if (status === "stopped") {
+          setVoiceStatus("Ready");
+        } else if (status === "error") {
+          setVoiceStatus("Voice unavailable");
+          setError(message ?? "Gradium transcription failed.");
+          setIsRecording(false);
+        }
+      },
+    });
+
+    sttRef.current = stt;
+    try {
+      await stt.start();
+      setIsRecording(true);
+    } catch (err) {
+      setIsRecording(false);
+      setVoiceStatus("Voice unavailable");
+      setError(
+        err instanceof Error
+          ? `${err.message}. You can still paste text and click Analyze.`
+          : "Voice input failed. You can still paste text and click Analyze.",
+      );
+    }
+  }
+
   function clearTranscript() {
+    sttRef.current?.stop();
+    setIsRecording(false);
+    setVoiceStatus("Ready");
     setTranscript("");
     setResults(null);
     setError("");
@@ -287,11 +314,23 @@ export default function Home() {
 
           <div className="flex flex-wrap items-center gap-3">
             <span className="border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-300">
-              Status: {isAnalyzing ? "Analyzing" : "Ready"}
+              Status: {isAnalyzing ? "Analyzing" : voiceStatus}
             </span>
             <button
               type="button"
-              onClick={analyzeTranscript}
+              onClick={handleRecord}
+              disabled={isAnalyzing}
+              className={`px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 ${
+                isRecording
+                  ? "bg-rose-400 text-zinc-950 hover:bg-rose-300"
+                  : "border border-zinc-700 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-900"
+              }`}
+            >
+              {isRecording ? "Stop" : "Record"}
+            </button>
+            <button
+              type="button"
+              onClick={() => analyzeTranscript()}
               disabled={isAnalyzing}
               className="bg-emerald-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
             >
@@ -310,6 +349,13 @@ export default function Home() {
         {error ? (
           <div className="border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
             {error}
+          </div>
+        ) : null}
+
+        {isAnalyzing ? (
+          <div className="flex items-center gap-2 text-sm text-sky-300">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-300 border-t-transparent" />
+            <span>Analyzing transcript...</span>
           </div>
         ) : null}
 
