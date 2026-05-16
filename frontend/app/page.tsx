@@ -149,18 +149,18 @@ const demoSessionDetails: Record<string, SessionDetailResponse> = {
 };
 
 const labelStyles: Record<string, string> = {
-  Symptom: "border-rose-200 bg-rose-50 text-rose-700",
+  Symptom: "border-sky-200 bg-sky-50 text-sky-700",
   Medication: "border-sky-200 bg-sky-50 text-sky-700",
-  Dosage: "border-amber-200 bg-amber-50 text-amber-800",
+  Dosage: "border-blue-200 bg-blue-50 text-blue-800",
   "Medical History": "border-violet-200 bg-violet-50 text-violet-700",
   "Anatomical Site": "border-teal-200 bg-teal-50 text-teal-700",
   Duration: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  Frequency: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
+  Frequency: "border-indigo-200 bg-indigo-50 text-indigo-700",
 };
 
 const priorityStyles: Record<string, string> = {
   high: "border-rose-200 bg-rose-50 text-rose-700",
-  medium: "border-amber-200 bg-amber-50 text-amber-800",
+  medium: "border-sky-200 bg-sky-50 text-sky-800",
   low: "border-zinc-200 bg-zinc-50 text-zinc-600",
 };
 
@@ -323,7 +323,7 @@ function Waveform({ active, levels }: { active: boolean; levels: number[] }) {
           <span
             key={`${index}-${level}`}
             className={`w-1 rounded-full transition-all duration-75 ${
-              active ? "bg-[#6e8f88]" : "bg-zinc-300"
+              active ? "bg-[#5b8fb9]" : "bg-zinc-300"
             }`}
             style={{
               height: `${Math.max(8, Math.round(10 + weighted * 50))}px`,
@@ -344,7 +344,7 @@ function LatencyBadge({ latency }: { latency?: number }) {
   return (
     <span
       className={`text-2xl font-semibold tabular-nums ${
-        latency < 1000 ? "text-[#2d7b6f]" : "text-[#d56f60]"
+        latency < 1000 ? "text-[#2f80b7]" : "text-[#6b8fb8]"
       }`}
     >
       {latency}ms
@@ -369,7 +369,7 @@ function EntityPanel({
   return (
     <article
       className={`rounded-2xl border bg-white p-4 shadow-sm ${
-        isWinner ? "border-[#6e8f88] ring-4 ring-[#dbe9e4]" : "border-zinc-200"
+        isWinner ? "border-[#5b8fb9] ring-4 ring-[#dbeafe]" : "border-zinc-200"
       }`}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -601,7 +601,7 @@ function FollowUpList({
               onClick={() => onToggle(question)}
               className={`flex shrink-0 items-center gap-2 rounded-full border py-1 pl-2 pr-1 text-xs font-semibold transition ${
                 question.answered
-                  ? "border-[#6e8f88] bg-[#eef6f3] text-[#557a72]"
+                  ? "border-[#5b8fb9] bg-[#eff6ff] text-[#3f6f95]"
                   : "border-zinc-200 bg-zinc-50 text-zinc-500"
               }`}
               aria-pressed={question.answered}
@@ -612,7 +612,7 @@ function FollowUpList({
               <span>{question.answered ? "Done" : "Open"}</span>
               <span
                 className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] shadow-sm transition ${
-                  question.answered ? "bg-[#6e8f88] text-white" : "bg-white text-zinc-400"
+                  question.answered ? "bg-[#5b8fb9] text-white" : "bg-white text-zinc-400"
                 }`}
               >
                 {question.answered ? "✓" : ""}
@@ -1175,7 +1175,7 @@ export default function Home() {
             * { box-sizing: border-box; }
             body {
               margin: 0;
-              background: #f7f7f3;
+              background: #f6f9fc;
               color: #171717;
               font-family: Arial, Helvetica, sans-serif;
               line-height: 1.5;
@@ -1189,7 +1189,7 @@ export default function Home() {
               padding: 40px;
             }
             .eyebrow {
-              color: #6e8f88;
+              color: #5b8fb9;
               font-size: 12px;
               font-weight: 700;
               letter-spacing: 0.24em;
@@ -1233,11 +1233,11 @@ export default function Home() {
             td span {
               display: inline-block;
               margin: 0 6px 6px 0;
-              border: 1px solid #cde3dc;
+              border: 1px solid #bfdbfe;
               border-radius: 999px;
               padding: 4px 10px;
               color: #315f56;
-              background: #f0f7f4;
+              background: #eff6ff;
               font-size: 12px;
               font-weight: 700;
             }
@@ -1325,11 +1325,11 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f7f3] text-zinc-950">
+    <main className="min-h-screen bg-[#f6f9fc] text-zinc-950">
       <div className="grid min-h-screen lg:grid-cols-[320px_1fr]">
         <aside className="border-r border-zinc-200 bg-white/80 p-5">
           <div className="mb-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#6e8f88]">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5b8fb9]">
               MediCheck
             </p>
             <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-950">
@@ -1350,28 +1350,28 @@ export default function Home() {
               <input
                 value={newPatientName}
                 onChange={(event) => setNewPatientName(event.target.value)}
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#5b8fb9]"
                 placeholder="Patient name"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
                   value={newPatientAge}
                   onChange={(event) => setNewPatientAge(event.target.value)}
-                  className="min-w-0 rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                  className="min-w-0 rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#5b8fb9]"
                   inputMode="numeric"
                   placeholder="Age"
                 />
                 <input
                   value={newPatientSex}
                   onChange={(event) => setNewPatientSex(event.target.value)}
-                  className="min-w-0 rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                  className="min-w-0 rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#5b8fb9]"
                   placeholder="Sex"
                 />
               </div>
               <input
                 value={newPatientSummary}
                 onChange={(event) => setNewPatientSummary(event.target.value)}
-                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#5b8fb9]"
                 placeholder="Short reason for visit"
               />
               <button
@@ -1405,7 +1405,7 @@ export default function Home() {
                   key={patient.id}
                   className={`rounded-2xl border p-3 transition ${
                     isSelected
-                      ? "border-[#6e8f88] bg-[#eef6f3]"
+                      ? "border-[#5b8fb9] bg-[#eff6ff]"
                       : "border-zinc-200 bg-white hover:border-zinc-300"
                   }`}
                 >
@@ -1422,7 +1422,7 @@ export default function Home() {
                             "Patient profile"}
                         </p>
                       </div>
-                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#6e8f88]">
+                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#5b8fb9]">
                         {patient.sessions.length}
                       </span>
                     </div>
@@ -1443,7 +1443,7 @@ export default function Home() {
                             onClick={() => setSelectedSessionId(session.id)}
                             className={`w-full rounded-xl border px-3 py-2 text-left transition ${
                               session.id === selectedSessionId
-                                ? "border-[#6e8f88] bg-white text-zinc-950"
+                                ? "border-[#5b8fb9] bg-white text-zinc-950"
                                 : "border-transparent bg-white/60 text-zinc-500 hover:bg-white"
                             }`}
                           >
@@ -1483,7 +1483,7 @@ export default function Home() {
                   <input
                     value={newSessionTitle}
                     onChange={(event) => setNewSessionTitle(event.target.value)}
-                    className="min-w-0 flex-1 rounded-full border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88] sm:w-56"
+                    className="min-w-0 flex-1 rounded-full border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#5b8fb9] sm:w-56"
                     placeholder="Appointment title"
                   />
                   <button
@@ -1498,7 +1498,7 @@ export default function Home() {
               ) : null}
 
               <div className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f1ee] text-sm font-semibold text-[#426d63]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf4ff] text-sm font-semibold text-[#3f6f95]">
                   {doctor.name
                     .split(" ")
                     .map((part) => part[0])
@@ -1536,7 +1536,7 @@ export default function Home() {
                 <input
                   value={newSessionTitle}
                   onChange={(event) => setNewSessionTitle(event.target.value)}
-                  className="min-w-0 flex-1 rounded-full border border-zinc-200 px-4 py-2.5 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                  className="min-w-0 flex-1 rounded-full border border-zinc-200 px-4 py-2.5 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#5b8fb9]"
                   placeholder="Session title"
                 />
                 <button
@@ -1553,7 +1553,7 @@ export default function Home() {
             <div className="grid gap-6 xl:grid-cols-[430px_1fr]">
               <div className="space-y-6">
                 <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
-                  <div className="rounded-2xl bg-[#f9faf8] p-5">
+                  <div className="rounded-2xl bg-[#f8fbff] p-5">
                     <div className="flex flex-col items-center">
                       <button
                         type="button"
@@ -1562,19 +1562,19 @@ export default function Home() {
                         aria-label={isRecording ? "Stop recording" : "Start recording"}
                         className={`relative flex h-24 w-24 items-center justify-center rounded-full transition disabled:cursor-not-allowed ${
                           isRecording
-                            ? "bg-[#e8f1ee] text-[#426d63]"
-                            : "bg-[#eef2ef] text-[#6e8f88] hover:bg-[#e7eee9]"
+                            ? "bg-[#eaf4ff] text-[#3f6f95]"
+                            : "bg-[#eff6ff] text-[#5b8fb9] hover:bg-[#dbeafe]"
                         }`}
                       >
                         {isRecording ? (
-                          <span className="absolute h-full w-full animate-ping rounded-full bg-[#dbe9e4]" />
+                          <span className="absolute h-full w-full animate-ping rounded-full bg-[#dbeafe]" />
                         ) : null}
                         <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
                           <MicIcon />
                         </span>
                       </button>
 
-                      <p className="mt-4 text-2xl font-semibold tabular-nums text-[#5d7973]">
+                      <p className="mt-4 text-2xl font-semibold tabular-nums text-[#477aa1]">
                         {formatTimer(recordingSeconds)}
                       </p>
                       <Waveform active={isRecording} levels={audioLevels} />
@@ -1587,7 +1587,7 @@ export default function Home() {
                           type="button"
                           onClick={() => sendRecording()}
                           disabled={isAnalyzing}
-                          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ee8b7b] text-white shadow-sm transition hover:bg-[#e17c6d] disabled:cursor-not-allowed disabled:bg-zinc-300"
+                          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#60a5fa] text-white shadow-sm transition hover:bg-[#3b82f6] disabled:cursor-not-allowed disabled:bg-zinc-300"
                           aria-label="Send recording"
                         >
                           <SendIcon />
@@ -1618,7 +1618,7 @@ export default function Home() {
                       value={transcript}
                       onChange={(event) => setTranscript(event.target.value)}
                       placeholder="Type, paste, or record the patient's answer."
-                      className="min-h-44 w-full resize-y rounded-2xl border border-zinc-200 bg-white p-4 text-base leading-7 text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                      className="min-h-44 w-full resize-y rounded-2xl border border-zinc-200 bg-white p-4 text-base leading-7 text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#5b8fb9]"
                     />
                   </div>
                 </section>
@@ -1647,7 +1647,7 @@ export default function Home() {
                       type="button"
                       onClick={generateSessionPdf}
                       disabled={!canGeneratePdf}
-                      className="rounded-full bg-[#6e8f88] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5d7f77] disabled:cursor-not-allowed disabled:bg-zinc-300"
+                      className="rounded-full bg-[#5b8fb9] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#4b7fa8] disabled:cursor-not-allowed disabled:bg-zinc-300"
                     >
                       Generate PDF
                     </button>
@@ -1668,7 +1668,7 @@ export default function Home() {
                       </h2>
                     </div>
                     {isLoadingSession ? (
-                      <span className="text-sm text-[#6e8f88]">Loading...</span>
+                      <span className="text-sm text-[#5b8fb9]">Loading...</span>
                     ) : null}
                   </div>
                   <Timeline recordings={recordings} />
@@ -1685,8 +1685,8 @@ export default function Home() {
                       </h2>
                     </div>
                     {isAnalyzing ? (
-                      <div className="flex items-center gap-2 text-sm text-[#6e8f88]">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#6e8f88] border-t-transparent" />
+                      <div className="flex items-center gap-2 text-sm text-[#5b8fb9]">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#5b8fb9] border-t-transparent" />
                         <span>Analyzing...</span>
                       </div>
                     ) : null}
