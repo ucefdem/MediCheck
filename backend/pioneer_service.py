@@ -8,6 +8,7 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
+import requests
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -107,6 +108,10 @@ def _append_unique(grouped: dict[str, list[str]], label: str, value: str) -> Non
 
 def _normalize_raw_entities(raw_entities) -> list[dict]:
     if isinstance(raw_entities, dict):
+        result = raw_entities.get("result")
+        if isinstance(result, dict):
+            return _normalize_raw_entities(result)
+
         data = raw_entities.get("data")
         if isinstance(data, dict):
             return _normalize_raw_entities(data)
@@ -174,6 +179,33 @@ def _call_pioneer(text: str) -> list[dict]:
     return []
 
 
+def _call_pioneer_native(text: str, model_id: str) -> list[dict]:
+    api_key = os.getenv("PIONEER_API_KEY")
+    if not _configured(api_key):
+        return []
+
+    try:
+        response = requests.post(
+            "https://api.pioneer.ai/inference",
+            headers={
+                "X-API-Key": api_key,
+                "Content-Type": "application/json",
+            },
+            json={
+                "model_id": model_id,
+                "text": text,
+                "schema": {"entities": MEDICAL_LABELS},
+                "threshold": 0.45,
+            },
+            timeout=12,
+        )
+        response.raise_for_status()
+    except Exception:
+        return []
+
+    return _normalize_raw_entities(response.json())
+
+
 def _fallback_extract(text: str) -> list[dict]:
     lowered = text.lower()
     raw_entities: list[dict] = []
@@ -207,10 +239,14 @@ def _fallback_extract(text: str) -> list[dict]:
     return raw_entities
 
 
-def extract_entities(text: str) -> dict:
+def extract_entities(text: str, model_id: str | None = None) -> dict:
     start = time.perf_counter()
-    raw_entities = _call_pioneer(text)
-    provider = "pioneer_gliner2"
+    if model_id:
+        raw_entities = _call_pioneer_native(text, model_id)
+        provider = "pioneer_gliner2_finetuned"
+    else:
+        raw_entities = _call_pioneer(text)
+        provider = "pioneer_gliner2"
 
     if not raw_entities:
         raw_entities = _fallback_extract(text)
@@ -231,4 +267,12 @@ def extract_entities(text: str) -> dict:
         "latency_ms": max(latency_ms, 1),
         "raw": raw_entities,
         "provider": provider,
+        "model_id": model_id,
     }
+
+
+def extract_finetuned_entities(text: str) -> dict | None:
+    model_id = os.getenv("PIONEER_FINETUNED_MODEL_ID")
+    if not _configured(model_id):
+        return None
+    return extract_entities(text, model_id=model_id)

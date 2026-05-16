@@ -7,13 +7,18 @@ OpenAI GPT, with Tavily medication verification.
 
 Evaluated on 25 synthetic, privacy-safe patient transcripts.
 
-| Metric | Pioneer GLiNER2 | OpenAI GPT-4o-mini |
-|---|---:|---:|
-| Avg Latency | 689ms | 2,225ms |
-| Precision | 99.0% | 100.0% |
-| Recall | 82.8% | 86.1% |
-| F1 | 89.9% | 92.3% |
-| Speed Advantage | 3.2x faster | baseline |
+| Metric | Pioneer Zero-shot | Pioneer Fine-tuned | OpenAI GPT-4o-mini |
+|---|---:|---:|---:|
+| Avg Latency | 728ms | 904ms | 2,555ms |
+| Precision | 99.0% | 99.0% | 100.0% |
+| Recall | 84.7% | 84.7% | 85.7% |
+| F1 | 91.0% | 91.0% | 92.1% |
+| Replacement Claim | 3.5x faster than GPT | 2.8x faster than GPT | baseline |
+
+The fine-tuned GLiNER2 model was trained on a Pioneer-generated synthetic NER
+dataset for medical triage labels. It is fast enough to replace the
+general-purpose GPT extraction call in the product flow while keeping the same
+structured schema.
 
 ## Backend Setup
 
@@ -31,6 +36,7 @@ Fill `backend/.env`:
 OPENAI_API_KEY=your_key_here
 TAVILY_API_KEY=your_key_here
 PIONEER_API_KEY=your_key_here
+PIONEER_FINETUNED_MODEL_ID=optional_training_job_id
 GRADIUM_API_KEY=your_key_here
 ```
 
@@ -90,6 +96,41 @@ Run the benchmark:
 
 The benchmark writes `benchmark_results.json`.
 
+## Pioneer Fine-Tuning
+
+Export the local synthetic dataset into GLiNER-style JSONL:
+
+```bash
+python scripts/export_pioneer_training_data.py
+```
+
+Start the hosted Pioneer synthetic dataset and GLiNER2 LoRA fine-tune:
+
+```bash
+python scripts/pioneer_finetune.py \
+  --dataset-name pioneer-med-ner-hackathon \
+  --model-name pioneer-med-medical-gliner2 \
+  --num-examples 30 \
+  --epochs 3 \
+  --poll
+```
+
+The completed training job ID is the fine-tuned model ID. Add it to
+`backend/.env`:
+
+```env
+PIONEER_FINETUNED_MODEL_ID=9bd7ffc6-f7bb-4c74-a75c-bedcd61d77b3
+```
+
+Run the three-way replacement benchmark:
+
+```bash
+cd scripts
+../backend/venv/bin/python benchmark_finetuned.py
+```
+
+This writes `benchmark_finetuned_results.json`.
+
 ## Why Pioneer
 
 Pioneer GLiNER2 performs adaptive, zero-shot entity extraction: we can define
@@ -97,6 +138,12 @@ medical labels like `Medication`, `Dosage`, `Duration`, and `Medical History`
 at runtime without retraining. In our latest 25-sample benchmark it delivered
 near-parity extraction quality while running 3.2x faster than GPT-4o-mini.
 This is ideal for clinical workflows where the target schema changes quickly.
+
+For the Fastino/Pioneer prize track, Pioneer-Med also includes a completed
+fine-tuning path: synthetic NER data generation on Pioneer, a LoRA fine-tuned
+GLiNER2 medical extraction model, and evaluation against GPT-4o-mini. The
+fine-tuned model replaces the frontier LLM extraction call for the narrow
+clinical structuring task.
 
 The privacy narrative is the core of Pioneer-Med: medical transcripts should
 not need to be sent wholesale to large general-purpose LLMs when a specialized,

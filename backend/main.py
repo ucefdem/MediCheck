@@ -39,6 +39,7 @@ class TavilyCard(BaseModel):
 
 class TriageResponse(BaseModel):
     pioneer: ExtractionResult
+    pioneer_finetuned: Optional[ExtractionResult] = None
     openai: ExtractionResult
     tavily_cards: list[TavilyCard]
     transcript: str
@@ -141,16 +142,18 @@ async def triage(request: TriageRequest) -> TriageResponse:
         raise HTTPException(status_code=400, detail="Transcript too short")
 
     try:
-        pioneer_result, openai_result = await asyncio.gather(
+        pioneer_result, pioneer_finetuned_result, openai_result = await asyncio.gather(
             asyncio.to_thread(pioneer_service.extract_entities, transcript),
+            asyncio.to_thread(pioneer_service.extract_finetuned_entities, transcript),
             openai_service.extract_entities(transcript),
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}") from exc
 
-    medications = pioneer_result.get("entities", {}).get("Medication", [])
-    symptoms = pioneer_result.get("entities", {}).get("Symptom", [])
-    medical_history = pioneer_result.get("entities", {}).get("Medical History", [])
+    primary_pioneer_result = pioneer_finetuned_result or pioneer_result
+    medications = primary_pioneer_result.get("entities", {}).get("Medication", [])
+    symptoms = primary_pioneer_result.get("entities", {}).get("Symptom", [])
+    medical_history = primary_pioneer_result.get("entities", {}).get("Medical History", [])
 
     tavily_cards = []
     if medications:
@@ -163,17 +166,28 @@ async def triage(request: TriageRequest) -> TriageResponse:
         except Exception:
             tavily_cards = []
 
-    winner = (
-        "pioneer"
-        if pioneer_result.get("latency_ms", 0) <= openai_result.get("latency_ms", 0)
-        else "openai"
-    )
+    candidates = {
+        "pioneer": pioneer_result.get("latency_ms", 0),
+        "openai": openai_result.get("latency_ms", 0),
+    }
+    if pioneer_finetuned_result:
+        candidates["pioneer_finetuned"] = pioneer_finetuned_result.get("latency_ms", 0)
+    winner = min(candidates, key=candidates.get)
 
     return TriageResponse(
         pioneer=ExtractionResult(
             entities=pioneer_result.get("entities", {label: [] for label in MEDICAL_LABELS}),
             latency_ms=pioneer_result.get("latency_ms", 0),
             provider=pioneer_result.get("provider"),
+        ),
+        pioneer_finetuned=(
+            ExtractionResult(
+                entities=pioneer_finetuned_result.get("entities", {label: [] for label in MEDICAL_LABELS}),
+                latency_ms=pioneer_finetuned_result.get("latency_ms", 0),
+                provider=pioneer_finetuned_result.get("provider"),
+            )
+            if pioneer_finetuned_result
+            else None
         ),
         openai=ExtractionResult(
             entities=openai_result.get("entities", {label: [] for label in MEDICAL_LABELS}),

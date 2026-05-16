@@ -1,0 +1,157 @@
+{
+  "dataset_name": "pioneer-med-ner-hackathon",
+  "model_name": "pioneer-med-medical-gliner2",
+  "labels": [
+    "Symptom",
+    "Medication",
+    "Dosage",
+    "Medical History",
+    "Anatomical Site",
+    "Duration",
+    "Frequency"
+  ],
+  "base_model": "fastino/gliner2-base-v1",
+  "generation": {
+    "job_id": "441320a4-81fe-48d7-a255-52e24448e265",
+    "status": "queued",
+    "dataset_name": "pioneer-med-ner-hackathon",
+    "task_type": "ner",
+    "is_seed": false,
+    "message": "Generation job started"
+  },
+  "generation_job_id": "441320a4-81fe-48d7-a255-52e24448e265",
+  "generation_status": {
+    "job_id": "441320a4-81fe-48d7-a255-52e24448e265",
+    "status": "ready",
+    "data": null,
+    "count": 30,
+    "task_type": "ner",
+    "token_usage": null,
+    "dataset": {
+      "id": "441320a4-81fe-48d7-a255-52e24448e265",
+      "dataset_name": "pioneer-med-ner-hackathon",
+      "version_number": "1",
+      "dataset_path": "15317c67-8080-4c9a-8c35-5049c6a093a0/441320a4-81fe-48d7-a255-52e24448e265/1",
+      "sample_size": 30,
+      "labels": [
+        "Symptom",
+        "Medication",
+        "Dosage",
+        "Medical History",
+        "Anatomical Site",
+        "Duration",
+        "Frequency"
+      ],
+      "project_id": null,
+      "is_seed": false,
+      "root_dataset_id": null,
+      "synthesis_session_id": null
+    },
+    "error": null,
+    "is_seed": false,
+    "created_at": "2026-05-16T13:07:00.081317+00:00"
+  },
+  "training": {
+    "id": "9bd7ffc6-f7bb-4c74-a75c-bedcd61d77b3",
+    "user_id": "15317c67-8080-4c9a-8c35-5049c6a093a0",
+    "project_id": "e843a795-8fcb-4716-ae67-627a5dcd8e0c",
+    "model_name": "pioneer-med-medical-gliner2",
+    "datasets": [
+      {
+        "name": "pioneer-med-ner-hackathon",
+        "version": "1"
+      }
+    ],
+    "base_model": "fastino/gliner2-base-v1",
+    "validation_data_percentage": 0.2,
+    "nr_epochs": 3,
+    "learning_rate": 5e-05,
+    "batch_size": 4,
+    "trained_model_path": null,
+    "job_reference": "9bd7ffc6-f7bb-4c74-a75c-bedcd61d77b3",
+    "instance_type": "ml.g4dn.xlarge",
+    "status": "requested",
+    "normalized_status": "requested",
+    "is_terminal_status": false,
+    "error_message": null,
+    "created_at": "2026-05-16T13:07:45.088934+00:00",
+    "updated_at": "2026-05-16T13:07:45.088934+00:00",
+    "started_at": null,
+    "completed_at": null,
+    "model_auto_selected": false,
+    "model_selection_reason": null,
+    "task_type": "ner",
+    "labels": [
+      "Symptom",
+      "Medication",
+      "Dosage",
+      "Medical History",
+      "Anatomical Site",
+      "Duration",
+      "Frequency"
+    ],
+    "example": null,
+    "metrics": null,
+    "version_number": "1",
+    "root_job_id": null,
+    "provider_deployments": null,
+    "provider_name": "modal",
+    "progress_percent": null,
+    "current_epoch": null,
+    "deployment_status": null
+  },
+  "training_job_id": "9bd7ffc6-f7bb-4c74-a75c-bedcd61d77b3",
+  "training_status": {
+    "id": "9bd7ffc6-f7bb-4c74-a75c-bedcd61d77b3",
+    "user_id": "15317c67-8080-4c9a-8c35-5049c6a093a0",
+    "project_id": "e843a795-8fcb-4716-ae67-627a5dcd8e0c",
+    "model_name": "pioneer-med-medical-gliner2",
+    "datasets": [
+      {
+        "name": "pioneer-med-ner-hackathon",
+        "version": "1"
+      }
+    ],
+    "base_model": "fastino/gliner2-base-v1",
+    "validation_data_percentage": 0.2,
+    "nr_epochs": 3,
+    "learning_rate": 5e-05,
+    "batch_size": 4,
+    "trained_model_path": "adapters/15317c67-8080-4c9a-8c35-5049c6a093a0/9bd7ffc6-f7bb-4c74-a75c-bedcd61d77b3",
+    "job_reference": "modal:fc-01KRRECRQZ4N2S3GV4B04VD631",
+    "instance_type": "modal-l4",
+    "status": "complete",
+    "normalized_status": "complete",
+    "is_terminal_status": true,
+    "error_message": null,
+    "created_at": "2026-05-16T13:07:45.088934+00:00",
+    "updated_at": "2026-05-16T13:08:32.472243+00:00",
+    "started_at": "2026-05-16T13:08:02.793520+00:00",
+    "completed_at": "2026-05-16T13:08:32.472262+00:00",
+    "model_auto_selected": false,
+    "model_selection_reason": null,
+    "task_type": "ner",
+    "labels": [
+      "Symptom",
+      "Medication",
+      "Dosage",
+      "Medical History",
+      "Anatomical Site",
+      "Duration",
+      "Frequency"
+    ],
+    "example": null,
+    "metrics": {
+      "final_training_loss": 25.596153,
+      "final_validation_loss": 26.108899,
+      "best_validation_loss": 26.108899
+    },
+    "version_number": "1",
+    "root_job_id": null,
+    "provider_deployments": null,
+    "provider_name": "modal",
+    "progress_percent": null,
+    "current_epoch": null,
+    "deployment_status": null
+  }
+}
