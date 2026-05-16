@@ -1,23 +1,23 @@
 {
   "n_samples": 25,
-  "model_id": "6695fcbc-8158-469f-9585-09c7c8925fbb",
+  "model_id": "5ed1fb7c-17a6-443f-b3ca-dc0acc507735",
   "rows": [
     {
       "id": 1,
       "pioneer_zero_shot": {
-        "latency_ms": 1402,
+        "latency_ms": 3561,
         "precision": 1.0,
-        "recall": 0.875,
-        "f1": 0.9333333333333333
+        "recall": 1.0,
+        "f1": 1.0
       },
       "pioneer_finetuned": {
-        "latency_ms": 2329,
-        "precision": 0.8571428571428571,
-        "recall": 0.75,
-        "f1": 0.7999999999999999
+        "latency_ms": 2825,
+        "precision": 0.8888888888888888,
+        "recall": 1.0,
+        "f1": 0.9411764705882353
       },
       "openai": {
-        "latency_ms": 2465,
+        "latency_ms": 3755,
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0
@@ -26,19 +26,19 @@
     {
       "id": 2,
       "pioneer_zero_shot": {
-        "latency_ms": 1071,
+        "latency_ms": 783,
         "precision": 1.0,
-        "recall": 0.8571428571428571,
-        "f1": 0.923076923076923
+        "recall": 1.0,
+        "f1": 1.0
       },
       "pioneer_finetuned": {
-        "latency_ms": 1066,
-        "precision": 0.8888888888888888,
+        "latency_ms": 3120,
+        "precision": 0.875,
         "recall": 1.0,
-        "f1": 0.9411764705882353
+        "f1": 0.9333333333333333
       },
       "openai": {
-        "latency_ms": 1908,
+        "latency_ms": 3122,
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0
@@ -47,19 +47,19 @@
     {
       "id": 3,
       "pioneer_zero_shot": {
-        "latency_ms": 1085,
+        "latency_ms": 638,
         "precision": 0.8333333333333334,
         "recall": 0.625,
         "f1": 0.7142857142857143
       },
       "pioneer_finetuned": {
-        "latency_ms": 1565,
-        "precision": 0.7777777777777778,
-        "recall": 0.875,
-        "f1": 0.823529411764706
+        "latency_ms": 1195,
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.888888888888889
       },
       "openai": {
-        "latency_ms": 2479,
+        "latency_ms": 2970,
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0
@@ -68,19 +68,19 @@
     {
       "id": 4,
       "pioneer_zero_shot": {
-        "latency_ms": 2113,
+        "latency_ms": 1204,
         "precision": 1.0,
-        "recall": 0.5555555555555556,
-        "f1": 0.7142857142857143
+        "recall": 0.7777777777777778,
+        "f1": 0.8750000000000001
       },
       "pioneer_finetuned": {
-        "latency_ms": 838,
+        "latency_ms": 992,
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0
       },
       "openai": {
-        "latency_ms": 2335,
+        "latency_ms": 1905,
         "precision": 1.0,
         "recall": 0.8888888888888888,
         "f1": 0.9411764705882353
@@ -89,19 +89,19 @@
     {
       "id": 5,
       "pioneer_zero_shot": {
-        "latency_ms": 1216,
+        "latency_ms": 1961,
         "precision": 1.0,
         "recall": 0.8888888888888888,
         "f1": 0.9411764705882353
       },
       "pioneer_finetuned": {
-        "latency_ms": 1645,
-        "precision": 0.8888888888888888,
-        "recall": 0.8888888888888888,
-        "f1": 0.8888888888888888
+        "latency_ms": 986,
+        "precision": 0.9,
+        "recall": 1.0,
+        "f1": 0.9473684210526316
       },
       "openai": {
-        "latency_ms": 2251,
+        "latency_ms": 2503,
         "precision": 1.0,
         "recall": 0.8888888888888888,
         "f1": 0.9411764705882353
@@ -110,19 +110,19 @@
     {
       "id": 6,
       "pioneer_zero_shot": {
-        "latency_ms": 784,
+        "latency_ms": 1561,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "pioneer_finetuned": {
-        "latency_ms": 1149,
+        "latency_ms": 1562,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "openai": {
-        "latency_ms": 9148,
+        "latency_ms": 1797,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -131,19 +131,19 @@
     {
       "id": 7,
       "pioneer_zero_shot": {
-        "latency_ms": 1028,
+        "latency_ms": 2922,
         "precision": 1.0,
         "recall": 0.8181818181818182,
         "f1": 0.9
       },
       "pioneer_finetuned": {
-        "latency_ms": 1076,
+        "latency_ms": 2925,
         "precision": 1.0,
         "recall": 0.8181818181818182,
         "f1": 0.9
       },
       "openai": {
-        "latency_ms": 2670,
+        "latency_ms": 2928,
         "precision": 1.0,
         "recall": 0.8181818181818182,
         "f1": 0.9
@@ -152,19 +152,19 @@
     {
       "id": 8,
       "pioneer_zero_shot": {
-        "latency_ms": 1322,
+        "latency_ms": 452,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "pioneer_finetuned": {
-        "latency_ms": 1204,
+        "latency_ms": 638,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "openai": {
-        "latency_ms": 2269,
+        "latency_ms": 1819,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -173,19 +173,19 @@
     {
       "id": 9,
       "pioneer_zero_shot": {
-        "latency_ms": 851,
+        "latency_ms": 657,
         "precision": 1.0,
         "recall": 0.9,
         "f1": 0.9473684210526316
       },
       "pioneer_finetuned": {
-        "latency_ms": 1033,
+        "latency_ms": 1085,
         "precision": 1.0,
         "recall": 0.9,
         "f1": 0.9473684210526316
       },
       "openai": {
-        "latency_ms": 2642,
+        "latency_ms": 2323,
         "precision": 1.0,
         "recall": 0.9,
         "f1": 0.9473684210526316
@@ -194,19 +194,19 @@
     {
       "id": 10,
       "pioneer_zero_shot": {
-        "latency_ms": 960,
+        "latency_ms": 778,
         "precision": 1.0,
         "recall": 0.75,
         "f1": 0.8571428571428571
       },
       "pioneer_finetuned": {
-        "latency_ms": 1305,
+        "latency_ms": 677,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "openai": {
-        "latency_ms": 1575,
+        "latency_ms": 1957,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -215,19 +215,19 @@
     {
       "id": 11,
       "pioneer_zero_shot": {
-        "latency_ms": 2170,
+        "latency_ms": 1760,
         "precision": 0.9,
         "recall": 0.6666666666666666,
         "f1": 0.7659574468085106
       },
       "pioneer_finetuned": {
-        "latency_ms": 1152,
+        "latency_ms": 1305,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "openai": {
-        "latency_ms": 2515,
+        "latency_ms": 2433,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -236,19 +236,19 @@
     {
       "id": 12,
       "pioneer_zero_shot": {
-        "latency_ms": 2470,
+        "latency_ms": 2574,
         "precision": 1.0,
         "recall": 0.9090909090909091,
         "f1": 0.9523809523809523
       },
       "pioneer_finetuned": {
-        "latency_ms": 1078,
+        "latency_ms": 2661,
         "precision": 1.0,
         "recall": 0.9090909090909091,
         "f1": 0.9523809523809523
       },
       "openai": {
-        "latency_ms": 3751,
+        "latency_ms": 3168,
         "precision": 1.0,
         "recall": 0.9090909090909091,
         "f1": 0.9523809523809523
@@ -257,19 +257,19 @@
     {
       "id": 13,
       "pioneer_zero_shot": {
-        "latency_ms": 749,
+        "latency_ms": 2416,
         "precision": 1.0,
         "recall": 0.75,
         "f1": 0.8571428571428571
       },
       "pioneer_finetuned": {
-        "latency_ms": 1332,
+        "latency_ms": 2418,
         "precision": 1.0,
-        "recall": 0.6666666666666666,
-        "f1": 0.8
+        "recall": 0.75,
+        "f1": 0.8571428571428571
       },
       "openai": {
-        "latency_ms": 2178,
+        "latency_ms": 3037,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -278,19 +278,19 @@
     {
       "id": 14,
       "pioneer_zero_shot": {
-        "latency_ms": 2414,
+        "latency_ms": 2228,
         "precision": 1.0,
         "recall": 0.8,
         "f1": 0.888888888888889
       },
       "pioneer_finetuned": {
-        "latency_ms": 1124,
+        "latency_ms": 1947,
         "precision": 1.0,
         "recall": 0.8,
         "f1": 0.888888888888889
       },
       "openai": {
-        "latency_ms": 2240,
+        "latency_ms": 2485,
         "precision": 1.0,
         "recall": 0.8,
         "f1": 0.888888888888889
@@ -299,19 +299,19 @@
     {
       "id": 15,
       "pioneer_zero_shot": {
-        "latency_ms": 784,
+        "latency_ms": 1283,
         "precision": 1.0,
         "recall": 0.6666666666666666,
         "f1": 0.8
       },
       "pioneer_finetuned": {
-        "latency_ms": 1235,
+        "latency_ms": 1327,
         "precision": 1.0,
         "recall": 0.7777777777777778,
         "f1": 0.8750000000000001
       },
       "openai": {
-        "latency_ms": 1500,
+        "latency_ms": 1673,
         "precision": 1.0,
         "recall": 0.7777777777777778,
         "f1": 0.8750000000000001
@@ -320,19 +320,19 @@
     {
       "id": 16,
       "pioneer_zero_shot": {
-        "latency_ms": 1034,
+        "latency_ms": 772,
         "precision": 1.0,
-        "recall": 0.6666666666666666,
-        "f1": 0.8
+        "recall": 0.7777777777777778,
+        "f1": 0.8750000000000001
       },
       "pioneer_finetuned": {
-        "latency_ms": 1007,
+        "latency_ms": 936,
         "precision": 1.0,
         "recall": 0.7777777777777778,
         "f1": 0.8750000000000001
       },
       "openai": {
-        "latency_ms": 2717,
+        "latency_ms": 2719,
         "precision": 1.0,
         "recall": 0.7777777777777778,
         "f1": 0.8750000000000001
@@ -341,19 +341,19 @@
     {
       "id": 17,
       "pioneer_zero_shot": {
-        "latency_ms": 674,
+        "latency_ms": 1043,
         "precision": 1.0,
         "recall": 0.9090909090909091,
         "f1": 0.9523809523809523
       },
       "pioneer_finetuned": {
-        "latency_ms": 1032,
+        "latency_ms": 1044,
         "precision": 1.0,
         "recall": 0.9090909090909091,
         "f1": 0.9523809523809523
       },
       "openai": {
-        "latency_ms": 2059,
+        "latency_ms": 2359,
         "precision": 1.0,
         "recall": 0.9090909090909091,
         "f1": 0.9523809523809523
@@ -362,19 +362,19 @@
     {
       "id": 18,
       "pioneer_zero_shot": {
-        "latency_ms": 770,
+        "latency_ms": 1391,
         "precision": 1.0,
-        "recall": 0.6666666666666666,
-        "f1": 0.8
+        "recall": 0.5833333333333334,
+        "f1": 0.7368421052631579
       },
       "pioneer_finetuned": {
-        "latency_ms": 653,
+        "latency_ms": 1392,
         "precision": 1.0,
-        "recall": 0.8333333333333334,
-        "f1": 0.9090909090909091
+        "recall": 0.5833333333333334,
+        "f1": 0.7368421052631579
       },
       "openai": {
-        "latency_ms": 2542,
+        "latency_ms": 2532,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -383,19 +383,19 @@
     {
       "id": 19,
       "pioneer_zero_shot": {
-        "latency_ms": 853,
+        "latency_ms": 2427,
         "precision": 1.0,
-        "recall": 0.8333333333333334,
-        "f1": 0.9090909090909091
+        "recall": 0.75,
+        "f1": 0.8571428571428571
       },
       "pioneer_finetuned": {
-        "latency_ms": 709,
-        "precision": 1.0,
+        "latency_ms": 2818,
+        "precision": 0.9166666666666666,
         "recall": 0.8333333333333334,
-        "f1": 0.9090909090909091
+        "f1": 0.8730158730158729
       },
       "openai": {
-        "latency_ms": 2649,
+        "latency_ms": 3228,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -404,19 +404,19 @@
     {
       "id": 20,
       "pioneer_zero_shot": {
-        "latency_ms": 871,
-        "precision": 1.0,
-        "recall": 0.6666666666666666,
-        "f1": 0.8
+        "latency_ms": 1488,
+        "precision": 0.9090909090909091,
+        "recall": 0.5833333333333334,
+        "f1": 0.7106598984771573
       },
       "pioneer_finetuned": {
-        "latency_ms": 871,
+        "latency_ms": 1451,
         "precision": 1.0,
         "recall": 0.75,
         "f1": 0.8571428571428571
       },
       "openai": {
-        "latency_ms": 1757,
+        "latency_ms": 1798,
         "precision": 1.0,
         "recall": 0.75,
         "f1": 0.8571428571428571
@@ -425,19 +425,19 @@
     {
       "id": 21,
       "pioneer_zero_shot": {
-        "latency_ms": 722,
+        "latency_ms": 1588,
         "precision": 1.0,
         "recall": 0.9,
         "f1": 0.9473684210526316
       },
       "pioneer_finetuned": {
-        "latency_ms": 715,
-        "precision": 1.0,
+        "latency_ms": 1599,
+        "precision": 0.9090909090909091,
         "recall": 0.9,
-        "f1": 0.9473684210526316
+        "f1": 0.9045226130653266
       },
       "openai": {
-        "latency_ms": 2456,
+        "latency_ms": 1492,
         "precision": 1.0,
         "recall": 0.9,
         "f1": 0.9473684210526316
@@ -446,19 +446,19 @@
     {
       "id": 22,
       "pioneer_zero_shot": {
-        "latency_ms": 717,
+        "latency_ms": 889,
         "precision": 1.0,
         "recall": 0.8888888888888888,
         "f1": 0.9411764705882353
       },
       "pioneer_finetuned": {
-        "latency_ms": 856,
+        "latency_ms": 1606,
         "precision": 1.0,
         "recall": 0.8888888888888888,
         "f1": 0.9411764705882353
       },
       "openai": {
-        "latency_ms": 2019,
+        "latency_ms": 1795,
         "precision": 1.0,
         "recall": 0.8888888888888888,
         "f1": 0.9411764705882353
@@ -467,19 +467,19 @@
     {
       "id": 23,
       "pioneer_zero_shot": {
-        "latency_ms": 758,
+        "latency_ms": 1183,
         "precision": 1.0,
-        "recall": 0.8333333333333334,
-        "f1": 0.9090909090909091
+        "recall": 0.75,
+        "f1": 0.8571428571428571
       },
       "pioneer_finetuned": {
-        "latency_ms": 757,
+        "latency_ms": 906,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "openai": {
-        "latency_ms": 2144,
+        "latency_ms": 2404,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
@@ -488,19 +488,19 @@
     {
       "id": 24,
       "pioneer_zero_shot": {
-        "latency_ms": 802,
+        "latency_ms": 795,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "pioneer_finetuned": {
-        "latency_ms": 607,
+        "latency_ms": 1947,
         "precision": 1.0,
         "recall": 0.8333333333333334,
         "f1": 0.9090909090909091
       },
       "openai": {
-        "latency_ms": 4951,
+        "latency_ms": 4416,
         "precision": 1.0,
         "recall": 0.75,
         "f1": 0.8571428571428571
@@ -509,19 +509,19 @@
     {
       "id": 25,
       "pioneer_zero_shot": {
-        "latency_ms": 775,
+        "latency_ms": 833,
         "precision": 1.0,
         "recall": 0.7777777777777778,
         "f1": 0.8750000000000001
       },
       "pioneer_finetuned": {
-        "latency_ms": 651,
-        "precision": 1.0,
+        "latency_ms": 827,
+        "precision": 0.9090909090909091,
         "recall": 0.7777777777777778,
-        "f1": 0.8750000000000001
+        "f1": 0.8383233532934132
       },
       "openai": {
-        "latency_ms": 4174,
+        "latency_ms": 1861,
         "precision": 1.0,
         "recall": 0.7777777777777778,
         "f1": 0.8750000000000001
@@ -529,19 +529,19 @@
     }
   ],
   "pioneer_zero_shot": {
-    "avg_latency_ms": 1136,
-    "precision": 98.9,
-    "recall": 78.8,
-    "f1": 87.4
+    "avg_latency_ms": 1487,
+    "precision": 98.6,
+    "recall": 79.9,
+    "f1": 87.9
   },
   "pioneer_finetuned": {
-    "avg_latency_ms": 1080,
-    "precision": 97.7,
-    "recall": 84.2,
-    "f1": 90.2
+    "avg_latency_ms": 1608,
+    "precision": 96.8,
+    "recall": 85.5,
+    "f1": 90.3
   },
   "openai": {
-    "avg_latency_ms": 2776,
+    "avg_latency_ms": 2499,
     "precision": 100.0,
     "recall": 85.6,
     "f1": 92.1

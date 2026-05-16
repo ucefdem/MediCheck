@@ -9,16 +9,26 @@ Evaluated on 25 synthetic, privacy-safe patient transcripts.
 
 | Metric | Pioneer Zero-shot | Pioneer Fine-tuned | OpenAI GPT-4o-mini |
 |---|---:|---:|---:|
-| Avg Latency | 728ms | 904ms | 2,555ms |
-| Precision | 99.0% | 99.0% | 100.0% |
-| Recall | 84.7% | 84.7% | 85.7% |
-| F1 | 91.0% | 91.0% | 92.1% |
-| Replacement Claim | 3.5x faster than GPT | 2.8x faster than GPT | baseline |
+| Avg Latency | 1,136ms | 1,080ms | 2,776ms |
+| Precision | 98.9% | 97.7% | 100.0% |
+| Recall | 78.8% | 84.2% | 85.6% |
+| F1 | 87.4% | 90.2% | 92.1% |
+| Replacement Claim | 2.4x faster than GPT | 2.6x faster than GPT | baseline |
 
-The fine-tuned GLiNER2 model was trained on a Pioneer-generated synthetic NER
-dataset for medical triage labels. It is fast enough to replace the
+The active fine-tuned GLiNER2 model was trained on a larger Pioneer-generated
+synthetic NER dataset for medical triage labels. The recommended run requested
+1,000 examples and produced 946 usable labeled examples for LoRA training.
+It is fast enough to replace the
 general-purpose GPT extraction call in the product flow while keeping the same
 structured schema.
+
+We also completed a larger 10,000-request training run, split into two Pioneer
+generation jobs because the API caps a single generation request at 5,000
+examples. Pioneer produced 9,403 usable labeled examples, and the resulting
+model is saved as `5ed1fb7c-17a6-443f-b3ca-dc0acc507735`. Its benchmark is
+preserved in `benchmark_finetuned_10000_results.json`; for the live demo we keep
+the faster 1,000-request model active because it gives nearly the same quality
+with lower latency.
 
 ## Backend Setup
 
@@ -108,10 +118,12 @@ Start the hosted Pioneer synthetic dataset and GLiNER2 LoRA fine-tune:
 
 ```bash
 python scripts/pioneer_finetune.py \
-  --dataset-name pioneer-med-ner-hackathon \
-  --model-name pioneer-med-medical-gliner2 \
-  --num-examples 30 \
+  --dataset-name pioneer-med-ner-1000 \
+  --model-name pioneer-med-medical-gliner2-1000 \
+  --num-examples 1000 \
   --epochs 3 \
+  --state-path backend/data/pioneer_finetune_1000_state.json \
+  --fresh \
   --poll
 ```
 
@@ -119,7 +131,7 @@ The completed training job ID is the fine-tuned model ID. Add it to
 `backend/.env`:
 
 ```env
-PIONEER_FINETUNED_MODEL_ID=9bd7ffc6-f7bb-4c74-a75c-bedcd61d77b3
+PIONEER_FINETUNED_MODEL_ID=6695fcbc-8158-469f-9585-09c7c8925fbb
 ```
 
 Run the three-way replacement benchmark:
@@ -136,7 +148,7 @@ This writes `benchmark_finetuned_results.json`.
 Pioneer GLiNER2 performs adaptive, zero-shot entity extraction: we can define
 medical labels like `Medication`, `Dosage`, `Duration`, and `Medical History`
 at runtime without retraining. In our latest 25-sample benchmark it delivered
-near-parity extraction quality while running 3.2x faster than GPT-4o-mini.
+near-parity extraction quality while running 2.6x faster than GPT-4o-mini.
 This is ideal for clinical workflows where the target schema changes quickly.
 
 For the Fastino/Pioneer prize track, MediCheck also includes a completed
