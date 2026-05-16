@@ -470,19 +470,24 @@ function FollowUpList({
             <button
               type="button"
               onClick={() => onToggle(question)}
-              className={`h-7 w-12 rounded-full border p-1 transition ${
+              className={`flex shrink-0 items-center gap-2 rounded-full border py-1 pl-2 pr-1 text-xs font-semibold transition ${
                 question.answered
-                  ? "border-[#6e8f88] bg-[#6e8f88]"
-                  : "border-zinc-200 bg-zinc-100"
+                  ? "border-[#6e8f88] bg-[#eef6f3] text-[#557a72]"
+                  : "border-zinc-200 bg-zinc-50 text-zinc-500"
               }`}
               aria-pressed={question.answered}
-              aria-label="Mark follow-up answered"
+              aria-label={
+                question.answered ? "Mark follow-up unanswered" : "Mark follow-up answered"
+              }
             >
+              <span>{question.answered ? "Done" : "Open"}</span>
               <span
-                className={`block h-5 w-5 rounded-full bg-white shadow-sm transition ${
-                  question.answered ? "translate-x-5" : ""
+                className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] shadow-sm transition ${
+                  question.answered ? "bg-[#6e8f88] text-white" : "bg-white text-zinc-400"
                 }`}
-              />
+              >
+                {question.answered ? "✓" : ""}
+              </span>
             </button>
           </div>
         </article>

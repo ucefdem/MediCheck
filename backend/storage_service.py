@@ -201,7 +201,7 @@ class InMemoryWorkspaceStore:
         self.data["follow_up_questions"] = [
             question
             for question in self.data["follow_up_questions"]
-            if question["session_id"] != session_id or question.get("answered")
+            if question["session_id"] != session_id
         ]
         created = []
         for question in questions:
@@ -316,7 +316,7 @@ class SupabaseWorkspaceStore:
         recording_id: str,
         questions: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        self._delete("follow_up_questions", {"session_id": f"eq.{session_id}", "answered": "eq.false"})
+        self._delete("follow_up_questions", {"session_id": f"eq.{session_id}"})
         return [
             self._insert(
                 "follow_up_questions",
