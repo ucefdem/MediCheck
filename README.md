@@ -1,4 +1,4 @@
-# Pioneer-Med: Privacy-First Medical Triage AI
+# MediCheck: Privacy-First Medical Triage AI
 
 Real-time medical entity extraction benchmark comparing Pioneer GLiNER2 against
 OpenAI GPT, with Tavily medication verification.
@@ -139,12 +139,12 @@ at runtime without retraining. In our latest 25-sample benchmark it delivered
 near-parity extraction quality while running 3.2x faster than GPT-4o-mini.
 This is ideal for clinical workflows where the target schema changes quickly.
 
-For the Fastino/Pioneer prize track, Pioneer-Med also includes a completed
+For the Fastino/Pioneer prize track, MediCheck also includes a completed
 fine-tuning path: synthetic NER data generation on Pioneer, a LoRA fine-tuned
 GLiNER2 medical extraction model, and evaluation against GPT-4o-mini. The
 fine-tuned model replaces the frontier LLM extraction call for the narrow
 clinical structuring task.
 
-The privacy narrative is the core of Pioneer-Med: medical transcripts should
+The privacy narrative is the core of MediCheck: medical transcripts should
 not need to be sent wholesale to large general-purpose LLMs when a specialized,
 edge-ready extraction model can structure the same information faster.

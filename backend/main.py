@@ -1,4 +1,4 @@
-"""FastAPI entrypoint for Pioneer-Med."""
+"""FastAPI entrypoint for MediCheck."""
 
 from __future__ import annotations
 
@@ -46,8 +46,31 @@ class TriageResponse(BaseModel):
     winner: str
 
 
+def _merge_entities(*results: Optional[dict], label: str) -> list[str]:
+    merged = []
+    seen = set()
+    for result in results:
+        if not result:
+            continue
+        values = result.get("entities", {}).get(label, [])
+        for value in values:
+            cleaned = str(value).strip()
+            key = cleaned.lower()
+            if cleaned and key not in seen:
+                merged.append(cleaned)
+                seen.add(key)
+    return merged
+
+
+def _has_any_entities(result: Optional[dict]) -> bool:
+    if not result:
+        return False
+    entities = result.get("entities", {})
+    return any(values for values in entities.values())
+
+
 app = FastAPI(
-    title="Pioneer-Med API",
+    title="MediCheck API",
     description="Privacy-first medical entity extraction benchmark API.",
     version="0.1.0",
 )
@@ -68,7 +91,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "message": "Pioneer-Med API is running"}
+    return {"status": "ok", "message": "MediCheck API is running"}
 
 
 @app.websocket("/gradium/stt")
@@ -150,10 +173,24 @@ async def triage(request: TriageRequest) -> TriageResponse:
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}") from exc
 
-    primary_pioneer_result = pioneer_finetuned_result or pioneer_result
-    medications = primary_pioneer_result.get("entities", {}).get("Medication", [])
-    symptoms = primary_pioneer_result.get("entities", {}).get("Symptom", [])
-    medical_history = primary_pioneer_result.get("entities", {}).get("Medical History", [])
+    medications = _merge_entities(
+        pioneer_finetuned_result,
+        pioneer_result,
+        openai_result,
+        label="Medication",
+    )
+    symptoms = _merge_entities(
+        pioneer_finetuned_result,
+        pioneer_result,
+        openai_result,
+        label="Symptom",
+    )
+    medical_history = _merge_entities(
+        pioneer_finetuned_result,
+        pioneer_result,
+        openai_result,
+        label="Medical History",
+    )
 
     tavily_cards = []
     if medications:
@@ -166,13 +203,14 @@ async def triage(request: TriageRequest) -> TriageResponse:
         except Exception:
             tavily_cards = []
 
-    candidates = {
-        "pioneer": pioneer_result.get("latency_ms", 0),
-        "openai": openai_result.get("latency_ms", 0),
-    }
-    if pioneer_finetuned_result:
+    candidates = {}
+    if _has_any_entities(pioneer_result):
+        candidates["pioneer"] = pioneer_result.get("latency_ms", 0)
+    if _has_any_entities(openai_result):
+        candidates["openai"] = openai_result.get("latency_ms", 0)
+    if _has_any_entities(pioneer_finetuned_result):
         candidates["pioneer_finetuned"] = pioneer_finetuned_result.get("latency_ms", 0)
-    winner = min(candidates, key=candidates.get)
+    winner = min(candidates, key=candidates.get) if candidates else "pioneer"
 
     return TriageResponse(
         pioneer=ExtractionResult(

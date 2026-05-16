@@ -57,8 +57,11 @@ export class GradiumSTT {
   private onChunk: (text: string) => void;
   private onFinal: (text: string) => void;
   private onStatus: (status: GradiumStatus, message?: string) => void;
+  private onAudioLevels?: (levels: number[]) => void;
   private mediaStream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
+  private analyser: AnalyserNode | null = null;
+  private animationFrameId: number | null = null;
   private processor: ScriptProcessorNode | null = null;
   private source: MediaStreamAudioSourceNode | null = null;
   private ws: WebSocket | null = null;
@@ -68,14 +71,54 @@ export class GradiumSTT {
     onChunk,
     onFinal,
     onStatus,
+    onAudioLevels,
   }: {
     onChunk: (text: string) => void;
     onFinal: (text: string) => void;
     onStatus: (status: GradiumStatus, message?: string) => void;
+    onAudioLevels?: (levels: number[]) => void;
   }) {
     this.onChunk = onChunk;
     this.onFinal = onFinal;
     this.onStatus = onStatus;
+    this.onAudioLevels = onAudioLevels;
+  }
+
+  private startAudioMeter() {
+    if (!this.analyser || !this.onAudioLevels) {
+      return;
+    }
+
+    const frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+    const readLevels = () => {
+      if (!this.analyser || !this.onAudioLevels) {
+        return;
+      }
+
+      this.analyser.getByteFrequencyData(frequencyData);
+      const barCount = 25;
+      const maxBin = Math.min(frequencyData.length, 128);
+      const binsPerBar = Math.max(1, Math.floor(maxBin / barCount));
+      const levels = Array.from({ length: barCount }, (_, index) => {
+        const center = Math.floor(barCount / 2);
+        const offset = Math.abs(index - center);
+        const lowSide = index < center;
+        const binIndex = lowSide ? offset * 2 + 1 : offset * 2;
+        const start = Math.min(binIndex * binsPerBar, maxBin - binsPerBar);
+        const end = Math.min(start + binsPerBar, maxBin);
+        let sum = 0;
+        for (let bin = start; bin < end; bin += 1) {
+          sum += frequencyData[bin];
+        }
+        const average = sum / Math.max(end - start, 1);
+        return Math.min(1, average / 160);
+      });
+
+      this.onAudioLevels(levels);
+      this.animationFrameId = window.requestAnimationFrame(readLevels);
+    };
+
+    readLevels();
   }
 
   async start() {
@@ -116,6 +159,9 @@ export class GradiumSTT {
     this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     this.audioContext = new AudioContext();
     this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.fftSize = 512;
+    this.analyser.smoothingTimeConstant = 0.72;
     this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
     this.processor.onaudioprocess = (event) => {
       if (this.ws?.readyState !== WebSocket.OPEN || !this.audioContext) {
@@ -136,8 +182,10 @@ export class GradiumSTT {
       );
     };
 
+    this.source.connect(this.analyser);
     this.source.connect(this.processor);
     this.processor.connect(this.audioContext.destination);
+    this.startAudioMeter();
     this.onStatus("recording");
   }
 
@@ -145,11 +193,18 @@ export class GradiumSTT {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: "end_of_stream" }));
     }
+    if (this.animationFrameId !== null) {
+      window.cancelAnimationFrame(this.animationFrameId);
+    }
+    this.onAudioLevels?.([]);
     this.processor?.disconnect();
+    this.analyser?.disconnect();
     this.source?.disconnect();
     void this.audioContext?.close();
     this.mediaStream?.getTracks().forEach((track) => track.stop());
     this.processor = null;
+    this.analyser = null;
+    this.animationFrameId = null;
     this.source = null;
     this.audioContext = null;
     this.mediaStream = null;

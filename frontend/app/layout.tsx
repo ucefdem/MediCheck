@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Pioneer-Med",
+  title: "MediCheck",
   description: "Privacy-first medical triage AI dashboard",
 };
 
