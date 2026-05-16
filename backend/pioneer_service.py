@@ -28,6 +28,7 @@ _SYMPTOM_PATTERNS = [
     "shortness of breath",
     "dizziness",
     "headache",
+    "migraine",
     "fever",
     "nausea",
     "fatigue",
@@ -47,6 +48,9 @@ _MEDICATION_PATTERNS = [
     "insulin",
     "albuterol",
     "omeprazole",
+    "doliprane",
+    "paracetamol",
+    "acetaminophen",
 ]
 
 _HISTORY_PATTERNS = [
