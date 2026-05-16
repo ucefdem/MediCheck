@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   analyzeTriage,
+  createPatient,
   createRecording,
   createSession,
   getSession,
@@ -27,7 +28,7 @@ import type {
 } from "../types";
 
 const demoTranscript =
-  "Hi, my name is Youssef. I suffer from severe migraine for the past week. I started taking Doliprane.";
+  "I've had severe migraine for the past week and started taking Doliprane, but I am not sure about the dose.";
 
 const emptyEntities: EntityMap = {
   Symptom: [],
@@ -251,6 +252,32 @@ function summaryFromTranscript(transcript: string) {
   return trimmed.length > 180 ? `${trimmed.slice(0, 177)}...` : trimmed;
 }
 
+function escapeHtml(value: string | number | null | undefined) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function mergeMedicationCards(analyses: Analysis[]): TavilyCard[] {
+  const cards: TavilyCard[] = [];
+  const seen = new Set<string>();
+
+  for (const analysis of analyses) {
+    for (const card of analysis.tavily_cards ?? []) {
+      const key = card.drug.trim().toLocaleLowerCase();
+      if (key && !seen.has(key)) {
+        cards.push(card);
+        seen.add(key);
+      }
+    }
+  }
+
+  return cards;
+}
+
 function MicIcon() {
   return (
     <svg
@@ -385,6 +412,108 @@ function EntityPanel({
         </div>
       )}
     </article>
+  );
+}
+
+function mergeAnalysisEntities(analyses: Analysis[]): EntityMap {
+  const merged: EntityMap = Object.fromEntries(
+    Object.keys(emptyEntities).map((label) => [label, []]),
+  ) as EntityMap;
+  const seen: Record<string, Set<string>> = Object.fromEntries(
+    Object.keys(emptyEntities).map((label) => [label, new Set<string>()]),
+  );
+
+  for (const analysis of analyses) {
+    const results = [analysis.pioneer_finetuned, analysis.pioneer, analysis.openai].filter(
+      Boolean,
+    ) as ExtractionResult[];
+
+    for (const result of results) {
+      for (const label of Object.keys(emptyEntities)) {
+        for (const value of result.entities[label] ?? []) {
+          const cleaned = value.replace(/\s+/g, " ").trim();
+          const key = cleaned.toLocaleLowerCase();
+          if (cleaned && !seen[label].has(key)) {
+            merged[label].push(cleaned);
+            seen[label].add(key);
+          }
+        }
+      }
+    }
+  }
+
+  for (const label of Object.keys(merged)) {
+    const values = merged[label];
+    merged[label] = values.filter((value, index) => {
+      const normalized = value.toLocaleLowerCase();
+      return !values.some((candidate, candidateIndex) => {
+        if (candidateIndex === index) {
+          return false;
+        }
+        const candidateNormalized = candidate.toLocaleLowerCase();
+        return (
+          candidateNormalized.length > normalized.length &&
+          candidateNormalized.includes(normalized)
+        );
+      });
+    });
+  }
+
+  return merged;
+}
+
+function SessionContextPanel({
+  entities,
+  recordingCount,
+}: {
+  entities: EntityMap;
+  recordingCount: number;
+}) {
+  const populated = Object.entries(entities).filter(([, values]) => values.length);
+
+  return (
+    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            Accumulated context
+          </p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-zinc-950">
+            Session Case View
+          </h2>
+        </div>
+        <span className="rounded-full border border-zinc-200 px-3 py-1 text-xs font-semibold text-zinc-500">
+          {recordingCount} recording{recordingCount === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      {populated.length ? (
+        <div className="grid gap-3">
+          {populated.map(([label, values]) => (
+            <div key={label} className="rounded-xl bg-zinc-50 p-3">
+              <span className="text-xs font-semibold text-zinc-400">{label}</span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {values.map((value, index) => (
+                  <span
+                    key={`${label}-${value}-${index}`}
+                    className={`max-w-full rounded-full border px-3 py-1 text-xs font-medium leading-5 ${
+                      labelStyles[label] ??
+                      "border-zinc-200 bg-zinc-50 text-zinc-600"
+                    }`}
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-dashed border-zinc-200 bg-white/70 p-6 text-center text-sm text-zinc-400">
+          Record patient answers to build the accumulated session context.
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -538,16 +667,24 @@ export default function Home() {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isLoadingWorkspace, setIsLoadingWorkspace] = useState(true);
   const [isLoadingSession, setIsLoadingSession] = useState(false);
+  const [isCreatingPatient, setIsCreatingPatient] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState("Ready");
   const [error, setError] = useState("");
   const [newSessionTitle, setNewSessionTitle] = useState("Follow-up intake");
+  const [newPatientName, setNewPatientName] = useState("");
+  const [newPatientAge, setNewPatientAge] = useState("");
+  const [newPatientSex, setNewPatientSex] = useState("");
+  const [newPatientSummary, setNewPatientSummary] = useState("");
   const sttRef = useRef<GradiumSTT | null>(null);
 
   const selectedPatient = patients.find((patient) => patient.id === selectedPatientId) ?? null;
   const latestAnalysis = analyses.length ? analyses[analyses.length - 1] : null;
-  const sessionSummary = sessionDetail?.summary || "No session summary yet.";
+  const accumulatedEntities = useMemo(() => mergeAnalysisEntities(analyses), [analyses]);
+  const accumulatedMedicationCards = useMemo(() => mergeMedicationCards(analyses), [analyses]);
+  const hasOpenQuestions = followUpQuestions.some((question) => !question.answered);
+  const canGeneratePdf = recordings.length > 0 && !hasOpenQuestions;
 
   useEffect(() => {
     let cancelled = false;
@@ -681,9 +818,65 @@ export default function Home() {
   function selectPatient(patient: Patient) {
     setSelectedPatientId(patient.id);
     setSelectedSessionId(sortSessions(patient.sessions)[0]?.id ?? "");
-    setNewSessionTitle(`${patient.summary || "Patient"} session`);
+    setNewSessionTitle("New appointment");
     setTranscript("");
     setRecordingSeconds(0);
+  }
+
+  async function handleCreatePatient() {
+    const name = newPatientName.trim();
+    if (!name) {
+      setError("Add a patient name before creating a patient.");
+      return;
+    }
+
+    setIsCreatingPatient(true);
+    setError("");
+
+    try {
+      const patient = await createPatient({
+        name,
+        age: newPatientAge.trim() ? Number(newPatientAge) : undefined,
+        sex: newPatientSex.trim() || undefined,
+        summary: newPatientSummary.trim() || "New patient",
+      });
+      const normalizedPatient = { ...patient, sessions: patient.sessions ?? [] };
+      setPatients((items) => [normalizedPatient, ...items]);
+      setSelectedPatientId(normalizedPatient.id);
+      setSelectedSessionId("");
+      setSessionDetail(null);
+      setRecordings([]);
+      setAnalyses([]);
+      setFollowUpQuestions([]);
+      setNewPatientName("");
+      setNewPatientAge("");
+      setNewPatientSex("");
+      setNewPatientSummary("");
+      setNewSessionTitle("Initial appointment");
+    } catch (err) {
+      const localPatient: Patient = {
+        id: `patient_${Date.now()}`,
+        name,
+        age: newPatientAge.trim() ? Number(newPatientAge) : null,
+        sex: newPatientSex.trim() || null,
+        summary: newPatientSummary.trim() || "New patient",
+        sessions: [],
+      };
+      setPatients((items) => [localPatient, ...items]);
+      setSelectedPatientId(localPatient.id);
+      setSelectedSessionId("");
+      setSessionDetail(null);
+      setRecordings([]);
+      setAnalyses([]);
+      setFollowUpQuestions([]);
+      setError(
+        err instanceof Error
+          ? `${err.message}. Created a local patient until the backend is ready.`
+          : "Created a local patient until the backend is ready.",
+      );
+    } finally {
+      setIsCreatingPatient(false);
+    }
   }
 
   async function handleCreateSession() {
@@ -720,7 +913,7 @@ export default function Home() {
       setRecordings(detail.recordings);
       setAnalyses(detail.analyses);
       setFollowUpQuestions(detail.follow_up_questions);
-      setNewSessionTitle("Follow-up intake");
+      setNewSessionTitle("New appointment");
     } catch (err) {
       const fallbackSession = {
         id: `session_${Date.now()}`,
@@ -900,6 +1093,237 @@ export default function Home() {
     }
   }
 
+  function generateSessionPdf() {
+    if (!selectedPatient || !sessionDetail || !canGeneratePdf) {
+      return;
+    }
+
+    const entityRows = Object.entries(accumulatedEntities)
+      .filter(([, values]) => values.length)
+      .map(
+        ([label, values]) => `
+          <tr>
+            <th>${escapeHtml(label)}</th>
+            <td>${values.map((value) => `<span>${escapeHtml(value)}</span>`).join("")}</td>
+          </tr>
+        `,
+      )
+      .join("");
+
+    const medicationRows = accumulatedMedicationCards.length
+      ? accumulatedMedicationCards
+          .map(
+            (card) => `
+              <div class="note">
+                <strong>${escapeHtml(card.drug)}</strong>
+                <p>${escapeHtml(card.indication)}</p>
+                ${
+                  card.contraindications
+                    ? `<p><b>Caution:</b> ${escapeHtml(card.contraindications)}</p>`
+                    : ""
+                }
+                ${card.warning ? `<p><b>Warning:</b> ${escapeHtml(card.warning)}</p>` : ""}
+              </div>
+            `,
+          )
+          .join("")
+      : '<p class="muted">No medication verification cards were generated.</p>';
+
+    const recordingRows = recordings
+      .map(
+        (recording, index) => `
+          <div class="recording">
+            <div class="row">
+              <strong>Recording ${index + 1}</strong>
+              <span>${escapeHtml(formatDateTime(recording.created_at))} - ${escapeHtml(
+                formatTimer(recording.duration_seconds),
+              )}</span>
+            </div>
+            <p>${escapeHtml(recording.transcript)}</p>
+          </div>
+        `,
+      )
+      .join("");
+
+    const questionRows = followUpQuestions.length
+      ? followUpQuestions
+          .map(
+            (question) => `
+              <li>
+                <strong>[${question.answered ? "answered" : "open"}] ${escapeHtml(
+                  question.question,
+                )}</strong>
+                <span>${escapeHtml(question.reason)}</span>
+              </li>
+            `,
+          )
+          .join("")
+      : '<li><strong>No unresolved follow-up questions.</strong><span>The case context is ready for export.</span></li>';
+
+    const reportWindow = window.open("", "_blank", "width=900,height=1100");
+    if (!reportWindow) {
+      setError("Allow pop-ups to generate the PDF report.");
+      return;
+    }
+
+    reportWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>MediCheck Session Report - ${escapeHtml(selectedPatient.name)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              background: #f7f7f3;
+              color: #171717;
+              font-family: Arial, Helvetica, sans-serif;
+              line-height: 1.5;
+            }
+            main {
+              width: 820px;
+              margin: 32px auto;
+              background: #ffffff;
+              border: 1px solid #deded9;
+              border-radius: 18px;
+              padding: 40px;
+            }
+            .eyebrow {
+              color: #6e8f88;
+              font-size: 12px;
+              font-weight: 700;
+              letter-spacing: 0.24em;
+              text-transform: uppercase;
+            }
+            h1 { margin: 8px 0 0; font-size: 32px; }
+            h2 {
+              margin: 28px 0 12px;
+              font-size: 18px;
+              border-bottom: 1px solid #e5e5e0;
+              padding-bottom: 8px;
+            }
+            .meta {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 12px;
+              margin-top: 24px;
+            }
+            .meta div, .note, .recording {
+              border: 1px solid #e5e5e0;
+              border-radius: 12px;
+              padding: 12px;
+              background: #fbfbf8;
+            }
+            .label {
+              display: block;
+              color: #71717a;
+              font-size: 11px;
+              font-weight: 700;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+            }
+            table { width: 100%; border-collapse: collapse; }
+            th, td {
+              border-bottom: 1px solid #ecece7;
+              padding: 12px 0;
+              text-align: left;
+              vertical-align: top;
+            }
+            th { width: 180px; color: #71717a; }
+            td span {
+              display: inline-block;
+              margin: 0 6px 6px 0;
+              border: 1px solid #cde3dc;
+              border-radius: 999px;
+              padding: 4px 10px;
+              color: #315f56;
+              background: #f0f7f4;
+              font-size: 12px;
+              font-weight: 700;
+            }
+            .note, .recording { margin-bottom: 10px; }
+            .note p, .recording p { margin: 6px 0 0; color: #3f3f46; }
+            .row {
+              display: flex;
+              justify-content: space-between;
+              gap: 16px;
+              color: #71717a;
+              font-size: 12px;
+            }
+            ul { margin: 0; padding-left: 20px; }
+            li { margin-bottom: 10px; }
+            li span { display: block; color: #71717a; }
+            .muted { color: #71717a; }
+            .footer {
+              margin-top: 32px;
+              color: #71717a;
+              font-size: 11px;
+            }
+            @media print {
+              body { background: white; }
+              main {
+                width: auto;
+                margin: 0;
+                border: 0;
+                border-radius: 0;
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <main>
+            <div class="eyebrow">MediCheck Clinical Session Note</div>
+            <h1>${escapeHtml(sessionDetail.title)}</h1>
+
+            <section class="meta">
+              <div><span class="label">Patient</span>${escapeHtml(selectedPatient.name)}</div>
+              <div><span class="label">Clinician</span>${escapeHtml(doctor.name)}</div>
+              <div><span class="label">Patient profile</span>${escapeHtml(
+                [selectedPatient.age, selectedPatient.sex].filter(Boolean).join(" - ") ||
+                  "Not specified",
+              )}</div>
+              <div><span class="label">Generated</span>${escapeHtml(
+                new Date().toLocaleString(),
+              )}</div>
+              <div><span class="label">Session status</span>${escapeHtml(
+                sessionDetail.status,
+              )}</div>
+              <div><span class="label">Recordings</span>${recordings.length}</div>
+            </section>
+
+            <h2>Accumulated Clinical Context</h2>
+            ${
+              entityRows
+                ? `<table><tbody>${entityRows}</tbody></table>`
+                : '<p class="muted">No structured entities were extracted.</p>'
+            }
+
+            <h2>Medication Safety Notes</h2>
+            ${medicationRows}
+
+            <h2>Recording Timeline</h2>
+            ${recordingRows}
+
+            <h2>Follow-up Questions</h2>
+            <ul>${questionRows}</ul>
+
+            <p class="footer">
+              Generated by MediCheck from recorded session transcripts and model-assisted extraction.
+              This document is a clinical support artifact and should be reviewed by the clinician before being stored in the medical record.
+            </p>
+          </main>
+          <script>
+            window.addEventListener("load", () => {
+              window.print();
+            });
+          </script>
+        </body>
+      </html>
+    `);
+    reportWindow.document.close();
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f7f3] text-zinc-950">
       <div className="grid min-h-screen lg:grid-cols-[320px_1fr]">
@@ -912,6 +1336,54 @@ export default function Home() {
               Patient Workspace
             </h1>
           </div>
+
+          <section className="mb-5 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                New patient
+              </p>
+              <h2 className="mt-1 text-sm font-semibold text-zinc-950">
+                Add a client
+              </h2>
+            </div>
+            <div className="space-y-2">
+              <input
+                value={newPatientName}
+                onChange={(event) => setNewPatientName(event.target.value)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                placeholder="Patient name"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  value={newPatientAge}
+                  onChange={(event) => setNewPatientAge(event.target.value)}
+                  className="min-w-0 rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                  inputMode="numeric"
+                  placeholder="Age"
+                />
+                <input
+                  value={newPatientSex}
+                  onChange={(event) => setNewPatientSex(event.target.value)}
+                  className="min-w-0 rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                  placeholder="Sex"
+                />
+              </div>
+              <input
+                value={newPatientSummary}
+                onChange={(event) => setNewPatientSummary(event.target.value)}
+                className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88]"
+                placeholder="Short reason for visit"
+              />
+              <button
+                type="button"
+                onClick={handleCreatePatient}
+                disabled={isCreatingPatient}
+                className="w-full rounded-xl bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+              >
+                {isCreatingPatient ? "Adding..." : "Add Patient"}
+              </button>
+            </div>
+          </section>
 
           {isLoadingWorkspace ? (
             <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-sm text-zinc-500">
@@ -1005,17 +1477,38 @@ export default function Home() {
               </h2>
             </div>
 
-            <div className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f1ee] text-sm font-semibold text-[#426d63]">
-                {doctor.name
-                  .split(" ")
-                  .map((part) => part[0])
-                  .join("")
-                  .slice(0, 2)}
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-zinc-950">{doctor.name}</p>
-                <p className="text-xs text-zinc-400">Logged in</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {selectedPatient ? (
+                <div className="flex w-full gap-2 sm:w-auto">
+                  <input
+                    value={newSessionTitle}
+                    onChange={(event) => setNewSessionTitle(event.target.value)}
+                    className="min-w-0 flex-1 rounded-full border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:border-[#6e8f88] sm:w-56"
+                    placeholder="Appointment title"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCreateSession}
+                    disabled={isCreatingSession}
+                    className="rounded-full bg-zinc-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                  >
+                    {isCreatingSession ? "Creating..." : "New Session"}
+                  </button>
+                </div>
+              ) : null}
+
+              <div className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f1ee] text-sm font-semibold text-[#426d63]">
+                  {doctor.name
+                    .split(" ")
+                    .map((part) => part[0])
+                    .join("")
+                    .slice(0, 2)}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-950">{doctor.name}</p>
+                  <p className="text-xs text-zinc-400">Logged in</p>
+                </div>
               </div>
             </div>
           </header>
@@ -1130,21 +1623,34 @@ export default function Home() {
                   </div>
                 </section>
 
-                <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                    Session summary
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-zinc-600">{sessionSummary}</p>
-                </section>
+                <SessionContextPanel
+                  entities={accumulatedEntities}
+                  recordingCount={recordings.length}
+                />
 
                 <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
-                  <div className="mb-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                      Follow-up questions
-                    </p>
-                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-zinc-950">
-                      Missing Context
-                    </h2>
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                        Follow-up questions
+                      </p>
+                      <h2 className="mt-1 text-xl font-semibold tracking-tight text-zinc-950">
+                        Missing Context
+                      </h2>
+                      {!canGeneratePdf ? (
+                        <p className="mt-1 text-xs text-zinc-400">
+                          Answer all open questions to enable the session PDF.
+                        </p>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={generateSessionPdf}
+                      disabled={!canGeneratePdf}
+                      className="rounded-full bg-[#6e8f88] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5d7f77] disabled:cursor-not-allowed disabled:bg-zinc-300"
+                    >
+                      Generate PDF
+                    </button>
                   </div>
                   <FollowUpList questions={followUpQuestions} onToggle={toggleQuestion} />
                 </section>
@@ -1175,7 +1681,7 @@ export default function Home() {
                         Model extraction
                       </p>
                       <h2 className="mt-1 text-xl font-semibold tracking-tight text-zinc-950">
-                        Latest Analysis
+                        Latest Recording Analysis
                       </h2>
                     </div>
                     {isAnalyzing ? (
